@@ -5,13 +5,16 @@ import { UserDetails } from '../models/userDetails.model';
 import { UserHistory } from '../models/userHistory.model';
 import { UserFavourite } from '../models/userFavourites.model';
 import { UserShazam } from '../models/userShazam.model';
+import RefreshToken from './entities/refresh-token.entity';
+import { sign, verify } from 'jsonwebtoken';
 
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     UserCredential,
-    onAuthStateChanged,
     getAuth,
+    signOut,
+    deleteUser,
 } from 'firebase/auth'
 
 import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
@@ -19,6 +22,8 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
+
+    private refreshTokens: RefreshToken[] = [];
 
     constructor(private firebaseService: FirebaseService, private jwtTokenService: JwtService) {
 
@@ -43,7 +48,7 @@ export class AuthService {
         }
     }
 
-    public async login(email: string, password: string): Promise<any> {
+    public async login(email: string, password: string, values: { userAgent: string; ipAddress: string }): Promise<any> {
 
         try {
 
@@ -53,11 +58,13 @@ export class AuthService {
 
                 const id: string = userCredential.user.uid;
 
-                const payload = { username: userCredential.user.email, sub: id };
+                const user = {
+                    email: email,
+                    password: password,
+                    id: id,
+                } as User;
 
-                return {
-                    access_token: this.jwtTokenService.sign(payload),
-                };
+                return this.newRefreshAndAccessToken(user, values);
             }
 
 
@@ -99,6 +106,154 @@ export class AuthService {
         }
     }
 
+    public async logout(refreshStr): Promise<void> {
+        const refreshToken = await this.retrieveRefreshToken(refreshStr);
+        /////failing here
+        if (!refreshToken) {
+            return;
+        }
+
+
+        try {
+
+            const auth = this.firebaseService.auth;
+            signOut(auth).then(() => {
+
+                // delete refreshtoken from db
+                this.refreshTokens = this.refreshTokens.filter(
+                    (refreshToken) => refreshToken.id !== refreshToken.id,
+                );
+
+                return { message: 'logged out Succseffuly'}
+
+            }).catch((error) => {
+
+                // An error happened.
+                console.log(error)
+            });
+
+
+        } catch (error: unknown) {
+            console.log(error)
+        }
+
+    }
+
+    public async deleteAccount(refreshStr): Promise<void>{
+
+        const refreshToken = await this.retrieveRefreshToken(refreshStr);
+        /////failing here
+        if (!refreshToken) {
+            return;
+        }
+
+        try {
+
+            const auth = this.firebaseService.auth;
+            const user = auth.currentUser;
+
+            deleteUser(user).then(() => {
+
+                // delete refreshtoken from db
+                this.refreshTokens = this.refreshTokens.filter(
+                    (refreshToken) => refreshToken.id !== refreshToken.id,
+                );
+
+                return { message: 'Deleted Account Succseffuly'}
+
+            }).catch((error) => {
+
+                // An error happened.
+                console.log(error)
+            });
+
+
+        } catch (error: unknown) {
+            console.log(error)
+        }
+        
+    }
+
+    
+    // Helper methods
+    // Support service methods to the class
+    // from here onwards
+    private async refresh(refreshStr: string): Promise<string | undefined> {
+
+        const refreshToken = await this.retrieveRefreshToken(refreshStr);
+
+        if (!refreshToken) {
+            return undefined;
+        }
+
+
+        //replace
+        const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, refreshToken.userId);
+        const snapshotUsersDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersDetails);
+        // const user = await this.firebaseService.findOne(refreshToken.userId);
+
+        if (!snapshotUsersDetails.data()) {
+            return undefined;
+        }
+
+        const accessToken = {
+            userId: refreshToken.userId,
+        };
+
+        return sign(accessToken, 'topSecretAccess', { expiresIn: '1h' });
+    }
+    
+    private async newRefreshAndAccessToken(user: User, values: { userAgent: string; ipAddress: string },): Promise<{ accessToken: string; refreshToken: string; userData: {} }> {
+
+        const refreshObject = new RefreshToken({
+            id: this.refreshTokens.length === 0 ? 0 : this.refreshTokens[this.refreshTokens.length - 1].id + 1,
+            ...values,
+            userId: user.id,
+        });
+
+        this.refreshTokens.push(refreshObject);
+
+        try {
+
+            const userData = await this.getUserData(user.id)
+
+            return {
+                refreshToken: refreshObject.sign(),
+                accessToken: sign(
+                    {
+                        userId: user.id,
+                        userEmail: user.email,
+                    },
+                    'topSecretAccess',
+                    {
+                        expiresIn: '1h',
+                    },
+                ),
+                userData: userData,
+            };
+
+        } catch (error: unknown) {
+            console.log(`[ERROR]: ${error}`)
+        }
+    }
+
+    private retrieveRefreshToken(refreshStr: string): Promise<RefreshToken | undefined> {
+
+        try {
+            const decoded = verify(refreshStr, 'topSecretRefresh');
+
+            console.log(decoded)
+            if (typeof decoded === 'string') {
+                return undefined;
+            }
+            return Promise.resolve(
+                this.refreshTokens.find((token) => token.id === decoded.id),
+            );
+        } catch (e) {
+            return undefined;
+        }
+
+    }
 
     private async getUserData(id: string): Promise<any> {
 
@@ -121,7 +276,6 @@ export class AuthService {
 
         return userData;
     }
-
 
     private async createUserCollection(body: Omit<User, 'id'>, userCredential: UserCredential): Promise<void> {
         const user: User = {

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
+import { updateDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
+
+import { User } from 'src/modules/auth/models/user.model';
+import console from 'console';
+import { UserDetails } from 'src/modules/auth/models/userDetails.model';
 
 @Injectable()
 export class ProfileService {
@@ -10,11 +14,12 @@ export class ProfileService {
 
     }
 
-    public getUserData(): any {
+    public async getUserData(): Promise<{}> {
 
         try {
 
-            const userData = this.getData('O2jZhyLpFGW9E6P20QtvPsOjcTX2')
+            const user = this.firebaseService.auth.currentUser;
+            const userData = await this.getData(user.uid)
 
             return userData;
 
@@ -27,28 +32,84 @@ export class ProfileService {
 
     }
 
+    public async updateUserData(id: string, userData: User): Promise<any> {
+
+        try {
+
+            await this.updateProfileData(id, userData);
+
+            return 'updated successfully'
+
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
+
+    public async updateUserImage(id: string, body): Promise<any> {
+        try {
+
+            //await this.updateProfileImage(id, body)
+            return 'User image updated'
+
+        } catch (error) {
+
+            console.log(error)
+
+        }
+    }
+
+    public async updateUserSettings(id: string, body: UserDetails): Promise<any> {
+        try {
+
+            //await this.updateUserAppSettings(id, body)
+            return 'settings updated'
+
+        } catch (error) {
+
+            console.log(error)
+
+        }
+    }
+
+    public async getDashboardData(): Promise<any> {
+        
+    }
+
+
+    //helper Methods
     private async getData(id: string): Promise<any> {
 
-        const docRefUser: DocumentReference = doc(this.firebaseService.usersCollection, id);
-        const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersDetails', id);
-        const docRefUsersFavourite: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersFavourites', id);
-        const docRefUsersHistory: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersHistory', id);
-        const docRefUsersShazam: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersShazam', id);
+        const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, id);
 
-        const snapshotUser: DocumentSnapshot<DocumentData> = await getDoc(docRefUser);
         const snapshotUsersDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersDetails);
-        const snapshotUsersHistory: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersFavourite);
-        const snapshotUsersFavourite: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersHistory);
-        const snapshotUsersShazam: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersShazam);
 
         const userData = {
-            user: snapshotUser.data(),
             appData: snapshotUsersDetails.data(),
-            historyData: snapshotUsersHistory.data(),
-            favouriteData: snapshotUsersFavourite.data(),
-            shazamData: snapshotUsersShazam.data(),
         }
 
         return userData;
+    }
+
+    private async updateProfileData(id: string, newData: Omit<User, 'email'>): Promise<any> {
+
+        const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, id);
+
+        await updateDoc(docRefUsersDetails, {
+            ...newData
+        });
+    }
+
+    private async updateProfileImage(id: string, body): Promise<any> {
+
+    }
+
+    private async updateUserAppSettings(id: string, body: UserDetails): Promise<any> {
+
+        const docRefUserAppSettings: DocumentReference = doc(this.firebaseService.usersCollection, id, 'UsersDetails', id);
+
+        await updateDoc(docRefUserAppSettings, {
+            ...body
+        });
     }
 }

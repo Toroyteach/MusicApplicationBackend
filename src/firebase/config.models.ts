@@ -5,5 +5,8 @@ export interface Config {
     storageBucket: string,
     messagingSenderId: string,
     appId: string,
-    measurementId: string
+    measurementId: string,
+
+    //JWT Tokens
+    secretOrKey: string,
 }

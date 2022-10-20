@@ -16,5 +16,4 @@ export class UserDetails {
     favouritesCount: number;
     identifiedShazam: number;
     userExcerpt: string;
-    
 }

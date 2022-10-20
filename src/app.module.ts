@@ -11,9 +11,10 @@ import { ProfileService } from './modules/profile/profile/profile.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtModule } from '@nestjs/jwt';
 import { secret } from './utils/constants';
+import { MusicModule } from './modules/music/music.module';
 
 @Module({
-  imports: [AuthModule, ProfileModule, ConfigModule.forRoot({ isGlobal: true }), ProfileModule, JwtModule.register({secret, signOptions: { expiresIn: '2h'}})],
+  imports: [AuthModule, ProfileModule, ConfigModule.forRoot({ isGlobal: true }), ProfileModule, JwtModule.register({secret, signOptions: { expiresIn: '2h'}}), MusicModule],
   controllers: [AppController, ProfileController],
   providers: [AppService, FirebaseService, ProfileService, JwtService],
 })
