@@ -72,10 +72,6 @@ export class ProfileService {
         }
     }
 
-    public async getDashboardData(): Promise<any> {
-        
-    }
-
 
     //helper Methods
     private async getData(id: string): Promise<any> {

@@ -14,11 +14,9 @@ export class FirebaseService {
     public firestore: Firestore
 
     //Collections
-    public usersCollection: CollectionReference
-    // public usersHistoryCollection: CollectionReference
-    // public useraShazamCollection: CollectionReference
-    // public usersFavouritesCollection: CollectionReference
-    // public usersDetailsCollection: CollectionReference
+    public usersCollection: CollectionReference;
+    public usersMessagesCollection: CollectionReference;
+    public musicMixCommentsCollection: CollectionReference;
 
     constructor(private configService: ConfigService<Config>) {
         this.app = initializeApp({
@@ -35,11 +33,13 @@ export class FirebaseService {
 
         this.firestore = getFirestore(this.app);
 
-        this._createUsersCollection();
+        this._refUsersCollection();
     }
 
-    private _createUsersCollection() {
+    private _refUsersCollection() {
         this.usersCollection = collection(this.firestore, 'users')
+        this.usersMessagesCollection = collection(this.firestore, 'messages')
+        this.musicMixCommentsCollection = collection(this.firestore, 'comments')
     }
 
 }

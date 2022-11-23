@@ -15,19 +15,13 @@ export class ProfileController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('dashboardData')
-  async getDashboardData() {
-    return await this.profileService.getDashboardData()
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: User) {
     return await this.profileService.updateUserData(id, body)
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put('/profileImage/:id')
+  @Put('profileImage/:id')
   async updateImage(@Param('id') id: string, @Body() body) {
     return await this.profileService.updateUserImage(id, body)
   }
