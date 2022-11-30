@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { User } from '../models/user.model';
 import { UserDetails } from '../models/userDetails.model';
@@ -72,6 +72,8 @@ export class AuthService {
 
             console.warn(`[ERROR]: ${error}`)
 
+            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
+
         }
 
     }
@@ -103,6 +105,8 @@ export class AuthService {
 
             console.warn(`[ERROR]: ${error}`)
 
+            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
+
         }
     }
 
@@ -124,7 +128,7 @@ export class AuthService {
                     (refreshToken) => refreshToken.id !== refreshToken.id,
                 );
 
-                return { message: 'logged out Succseffuly'}
+                return { message: 'logged out Succseffuly' }
 
             }).catch((error) => {
 
@@ -134,12 +138,15 @@ export class AuthService {
 
 
         } catch (error: unknown) {
-            console.log(error)
+
+            console.warn(`[ERROR]: ${error}`)
+
+            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
         }
 
     }
 
-    public async deleteAccount(refreshStr): Promise<void>{
+    public async deleteAccount(refreshStr): Promise<void> {
 
         const refreshToken = await this.retrieveRefreshToken(refreshStr);
         /////failing here
@@ -159,7 +166,7 @@ export class AuthService {
                     (refreshToken) => refreshToken.id !== refreshToken.id,
                 );
 
-                return { message: 'Deleted Account Succseffuly'}
+                return { message: 'Deleted Account Succseffuly' }
 
             }).catch((error) => {
 
@@ -169,12 +176,33 @@ export class AuthService {
 
 
         } catch (error: unknown) {
-            console.log(error)
+
+            console.warn(`[ERROR]: ${error}`)
+
+            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
         }
-        
+
     }
 
-    
+    //updates users login and auth details
+    public async updateUser(): Promise<any> {
+        try {
+
+            const user = this.firebaseService.auth.currentUser;
+
+            return;
+
+
+        } catch (error: unknown) {
+
+            console.warn(`[ERROR]: ${error}`)
+
+            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
+
+        }
+    }
+
+
     // Helper methods
     // Support service methods to the class
     // from here onwards
@@ -202,7 +230,7 @@ export class AuthService {
 
         return sign(accessToken, 'topSecretAccess', { expiresIn: '1h' });
     }
-    
+
     private async newRefreshAndAccessToken(user: User, values: { userAgent: string; ipAddress: string },): Promise<{ accessToken: string; refreshToken: string; userData: {} }> {
 
         const refreshObject = new RefreshToken({

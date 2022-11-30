@@ -1,7 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, NestMiddleware, HttpException, HttpStatus } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from './modules/auth/auth/auth.service';
+import { AuthService } from '../modules/auth/auth/auth.service';
 interface UserRequest extends Request {
     user: any
 }

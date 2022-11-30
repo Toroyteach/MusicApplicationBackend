@@ -26,11 +26,11 @@ export class CommentsController {
     return this.commentsService.getMixComments(mixId);
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.commentsService.findOne(+id);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  findUsersComents(@Param('id') id: string) {
+    return this.commentsService.findUsersComments(id);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')

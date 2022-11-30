@@ -5,6 +5,7 @@ import { Auth, getAuth } from 'firebase/auth';
 import { Config } from 'src/firebase/config.models';
 
 import { CollectionReference, Firestore, getFirestore, collection } from 'firebase/firestore'
+import { FirebaseStorage, getStorage } from 'firebase/storage';
 
 @Injectable()
 export class FirebaseService {
@@ -12,11 +13,14 @@ export class FirebaseService {
     public app: FirebaseApp;
     public auth: Auth
     public firestore: Firestore
+    public storage: FirebaseStorage
 
     //Collections
     public usersCollection: CollectionReference;
     public usersMessagesCollection: CollectionReference;
     public musicMixCommentsCollection: CollectionReference;
+    public appSettingsCollection: CollectionReference;
+    public mixItemsCollection: CollectionReference;
 
     constructor(private configService: ConfigService<Config>) {
         this.app = initializeApp({
@@ -33,6 +37,8 @@ export class FirebaseService {
 
         this.firestore = getFirestore(this.app);
 
+        this.storage = getStorage()
+
         this._refUsersCollection();
     }
 
@@ -40,6 +46,8 @@ export class FirebaseService {
         this.usersCollection = collection(this.firestore, 'users')
         this.usersMessagesCollection = collection(this.firestore, 'messages')
         this.musicMixCommentsCollection = collection(this.firestore, 'comments')
+        this.appSettingsCollection = collection(this.firestore, 'appSettings')
+        this.mixItemsCollection = collection(this.firestore, 'mixItems')
     }
 
 }

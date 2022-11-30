@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Ip, Req, Delete } from '@nestjs/common';
+import { Body, Controller, Post, Ip, Req, Delete, Put, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from '../models/user.model';
 import { AuthGuard } from '@nestjs/passport';
@@ -31,5 +31,10 @@ export class AuthController {
   @Delete('deleteAccount')
   async deleteAccount(@Body() body: RefreshTokenDto) {
     return this.authService.deleteAccount(body.refreshToken);
+  }
+
+  @Put(':id')
+  updateUser(@Param('id') id: string) {
+    return this.authService.updateUser
   }
 }

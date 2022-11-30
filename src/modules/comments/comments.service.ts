@@ -89,7 +89,8 @@ export class CommentsService {
     }
   }
 
-  public async findOne(id: number) {
+  //get all the comments of one user
+  public async findUsersComments(id: string) {
 
     try {
 

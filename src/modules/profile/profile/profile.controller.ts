@@ -1,4 +1,5 @@
-import { Controller, Get, UseGuards, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, UseGuards, Put, Body, Param, Post, UseInterceptors, UploadedFile, FileTypeValidator, MaxFileSizeValidator, ParseFilePipe } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/modules/auth/auth/guards/jtw-auth.guard';
 import { ProfileService } from './profile.service';
 import { User } from 'src/modules/auth/models/user.model';
@@ -20,15 +21,42 @@ export class ProfileController {
     return await this.profileService.updateUserData(id, body)
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put('profileImage/:id')
-  async updateImage(@Param('id') id: string, @Body() body) {
-    return await this.profileService.updateUserImage(id, body)
+  //@UseGuards(JwtAuthGuard)
+  @Post('profileImage')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateImage(@UploadedFile(
+    new ParseFilePipe({
+      validators: [
+        new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' }),
+        new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 4 }),
+      ],
+    }),
+  ) file: Express.Multer.File) {
+    return await this.profileService.updateUserImage(file)
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put('profileSettings/:id')
-  async updateUserSettings(@Param('id') id: string, @Body() body: UserDetails) {
-    return await this.profileService.updateUserSettings(id, body)
+  //@UseGuards(JwtAuthGuard)
+  @Post('updateUserProfileSettings')
+  async updateUserSettings(@Body() body: UserDetails) {
+    return await this.profileService.updateUserSettings(body)
   }
+
+  //@UseGuards(JwtAuthGuard)
+  @Get('getUserDalleImages')
+  async getUserDalleImage() {
+    return await this.profileService.getUserDalleImages()
+  }
+
+  //@UseGuards(JwtAuthGuard)
+  @Get('downloadUserDalleImage/:id')
+  async downloadUserDalleImage(@Param('id') id: string) {
+    return await this.profileService.downloadAiImage(id)
+  }
+
+  //@UseGuards(JwtAuthGuard)
+  @Get('deleteUserAccount')
+  async deleteUserAccount() {
+    return await this.profileService.deleteUserAccountPlusData()
+  }
+
 }

@@ -6,7 +6,10 @@ import { FirebaseService } from './firebase/firebase.service';
 import { ConfigModule } from '@nestjs/config';
 import { ProfileModule } from './modules/profile/profile/profile.module';
 import { ProfileController } from './modules/profile/profile/profile.controller';
-import { isAuthenticated } from './app.middleware';
+import { CommentsController } from './modules/comments/comments.controller';
+import { isAuthenticated } from './utils/app.middleware';
+import { AppSettingsMiddleware } from './utils/appSettings.middleware';
+import { CommentsMiddleware } from './utils/comments.middleware';
 import { ProfileService } from './modules/profile/profile/profile.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtModule } from '@nestjs/jwt';
@@ -14,18 +17,19 @@ import { secret } from './utils/constants';
 import { MusicModule } from './modules/music/music.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { AdminModule } from './modules/profile/admin/admin.module';
 
 @Module({
-  imports: [AuthModule, ProfileModule, ConfigModule.forRoot({ isGlobal: true }), ProfileModule, JwtModule.register({secret, signOptions: { expiresIn: '2h'}}), MusicModule, ChatsModule, CommentsModule],
-  controllers: [AppController, ProfileController],
-  providers: [AppService, FirebaseService, ProfileService, JwtService],
+  imports: [AuthModule, ProfileModule, ConfigModule.forRoot({ isGlobal: true }), ProfileModule, JwtModule.register({secret, signOptions: { expiresIn: '2h'}}), MusicModule, ChatsModule, CommentsModule, AdminModule],
+  //controllers: [AppController, ProfileController],
+  //providers: [AppService, FirebaseService, ProfileService, JwtService],
 })
 export class AppModule {
 
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //     .apply(isAuthenticated)
-  //     .forRoutes(ProfileController);
-  // }
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CommentsMiddleware)
+      .forRoutes(CommentsController);
+  }
 
 }
