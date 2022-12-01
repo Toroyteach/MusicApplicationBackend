@@ -21,6 +21,8 @@ export class FirebaseService {
     public musicMixCommentsCollection: CollectionReference;
     public appSettingsCollection: CollectionReference;
     public mixItemsCollection: CollectionReference;
+    public notificationCollection: CollectionReference;
+    public feedbackCollection: CollectionReference;
 
     constructor(private configService: ConfigService<Config>) {
         this.app = initializeApp({
@@ -48,6 +50,8 @@ export class FirebaseService {
         this.musicMixCommentsCollection = collection(this.firestore, 'comments')
         this.appSettingsCollection = collection(this.firestore, 'appSettings')
         this.mixItemsCollection = collection(this.firestore, 'mixItems')
+        this.notificationCollection = collection(this.firestore, 'notifications')
+        this.feedbackCollection = collection(this.firestore, 'feedback')
     }
 
 }

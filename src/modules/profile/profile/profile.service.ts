@@ -164,6 +164,35 @@ export class ProfileService {
         console.log({ status: 'success', pic: user.photoURL })
     }
 
+    //check if image exist in storage
+    private async checkIfFileExists(filePath: string): Promise<any> {
+        const storage = getStorage();
+        const storageRef = ref(storage, filePath);
+
+        getDownloadURL(storageRef)
+            .then(url => {
+
+                // delete the image and return true
+                const desertRef = ref(storage, filePath);
+
+                // Delete the file
+                deleteObject(desertRef).then(() => {
+                    // File deleted successfully
+                }).catch((error) => {
+                    // Uh-oh, an error occurred!
+                });
+
+                return Promise.resolve(true);
+            })
+            .catch(error => {
+                if (error.code === 'storage/object-not-found') {
+                    return Promise.resolve(false);
+                } else {
+                    return Promise.reject(error);
+                }
+            });
+    }
+
     private async updateUserAppSettings(body: UserDetails): Promise<any> {
 
         const user = this.firebaseService.auth.currentUser;
@@ -176,6 +205,8 @@ export class ProfileService {
     }
 
     private async deleteAccountData(): Promise<any> {
+
+        //TODO: add delete users ratingss, chats, comments, 
 
         const user = this.firebaseService.auth.currentUser;
 
@@ -240,35 +271,6 @@ export class ProfileService {
                 return images
             }).catch((error) => {
                 // Uh-oh, an error occurred!
-            });
-    }
-
-    //check if image exist in storage
-    private async checkIfFileExists(filePath: string): Promise<any> {
-        const storage = getStorage();
-        const storageRef = ref(storage, filePath);
-
-        getDownloadURL(storageRef)
-            .then(url => {
-
-                // delete the image and return true
-                const desertRef = ref(storage, filePath);
-
-                // Delete the file
-                deleteObject(desertRef).then(() => {
-                    // File deleted successfully
-                }).catch((error) => {
-                    // Uh-oh, an error occurred!
-                });
-
-                return Promise.resolve(true);
-            })
-            .catch(error => {
-                if (error.code === 'storage/object-not-found') {
-                    return Promise.resolve(false);
-                } else {
-                    return Promise.reject(error);
-                }
             });
     }
 

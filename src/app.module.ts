@@ -18,9 +18,12 @@ import { MusicModule } from './modules/music/music.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { AdminModule } from './modules/profile/admin/admin.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { RatingsModule } from './modules/ratings/ratings.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
 
 @Module({
-  imports: [AuthModule, ProfileModule, ConfigModule.forRoot({ isGlobal: true }), ProfileModule, JwtModule.register({secret, signOptions: { expiresIn: '2h'}}), MusicModule, ChatsModule, CommentsModule, AdminModule],
+  imports: [AuthModule, ProfileModule, ConfigModule.forRoot({ isGlobal: true }), ProfileModule, JwtModule.register({secret, signOptions: { expiresIn: '2h'}}), MusicModule, ChatsModule, CommentsModule, AdminModule, NotificationModule, RatingsModule, FeedbackModule],
   //controllers: [AppController, ProfileController],
   //providers: [AppService, FirebaseService, ProfileService, JwtService],
 })

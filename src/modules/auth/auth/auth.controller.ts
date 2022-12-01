@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Ip, Req, Delete, Put, Param } from '@nestjs/common';
+import { Body, Controller, Post, Ip, Req, Delete, Put, Param, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from '../models/user.model';
 import { AuthGuard } from '@nestjs/passport';
@@ -36,5 +36,10 @@ export class AuthController {
   @Put(':id')
   updateUser(@Param('id') id: string) {
     return this.authService.updateUser
+  }
+
+  @Get(':email')
+  resetPassword(@Param('email') email: string) {
+    return this.authService.resetPassword
   }
 }

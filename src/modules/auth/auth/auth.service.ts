@@ -8,14 +8,7 @@ import { UserShazam } from '../models/userShazam.model';
 import RefreshToken from './entities/refresh-token.entity';
 import { sign, verify } from 'jsonwebtoken';
 
-import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    UserCredential,
-    getAuth,
-    signOut,
-    deleteUser,
-} from 'firebase/auth'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail } from 'firebase/auth'
 
 import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { JwtService } from '@nestjs/jwt';
@@ -25,9 +18,7 @@ export class AuthService {
 
     private refreshTokens: RefreshToken[] = [];
 
-    constructor(private firebaseService: FirebaseService, private jwtTokenService: JwtService) {
-
-    }
+    constructor(private firebaseService: FirebaseService, private jwtTokenService: JwtService) { }
 
     public async getOne(email): Promise<any> {
         const auth = getAuth();
@@ -117,10 +108,10 @@ export class AuthService {
             return;
         }
 
-
         try {
 
             const auth = this.firebaseService.auth;
+
             signOut(auth).then(() => {
 
                 // delete refreshtoken from db
@@ -202,8 +193,22 @@ export class AuthService {
         }
     }
 
+    public async resetPassword(email: string): Promise<any> {
+        try {
 
-    // Helper methods
+            return await this.sendResetPassword(email);
+
+        } catch (error: unknown) {
+
+            console.warn(`[ERROR]: ${error}`)
+
+            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
+
+        }
+    }
+
+
+    // Util methods
     // Support service methods to the class
     // from here onwards
     private async refresh(refreshStr: string): Promise<string | undefined> {
@@ -244,6 +249,8 @@ export class AuthService {
         try {
 
             const userData = await this.getUserData(user.id)
+
+            //TODO: get the user pending notifications and send back pending count or id.
 
             return {
                 refreshToken: refreshObject.sign(),
@@ -399,6 +406,20 @@ export class AuthService {
         }
 
         await setDoc(docRef, UserShazam)
+    }
+
+    private sendResetPassword(email: string) {
+        const auth = getAuth()
+
+        sendPasswordResetEmail(auth, email)
+            .then(() => {
+                return 'success'
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                // ..
+            });
     }
 
     private getUuid(): string {
