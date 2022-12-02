@@ -8,10 +8,11 @@ import { UserShazam } from '../models/userShazam.model';
 import RefreshToken from './entities/refresh-token.entity';
 import { sign, verify } from 'jsonwebtoken';
 
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail } from 'firebase/auth'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail, updateEmail } from 'firebase/auth'
 
 import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { JwtService } from '@nestjs/jwt';
+import { UserAccount } from '../models/userAccount.model';
 
 @Injectable()
 export class AuthService {
@@ -19,25 +20,6 @@ export class AuthService {
     private refreshTokens: RefreshToken[] = [];
 
     constructor(private firebaseService: FirebaseService, private jwtTokenService: JwtService) { }
-
-    public async getOne(email): Promise<any> {
-        const auth = getAuth();
-
-        const user = auth.currentUser;
-
-        const userData: User = {
-            email: user.email,
-        } as User;
-
-        if (email === user.email) {
-
-            return userData
-
-        } else {
-
-            return {}
-        }
-    }
 
     public async login(email: string, password: string, values: { userAgent: string; ipAddress: string }): Promise<any> {
 
@@ -102,6 +84,7 @@ export class AuthService {
     }
 
     public async logout(refreshStr): Promise<void> {
+
         const refreshToken = await this.retrieveRefreshToken(refreshStr);
         /////failing here
         if (!refreshToken) {
@@ -175,14 +158,10 @@ export class AuthService {
 
     }
 
-    //updates users login and auth details
-    public async updateUser(): Promise<any> {
+    public async updateUserAuth(userAccount: UserAccount): Promise<any> {
         try {
 
-            const user = this.firebaseService.auth.currentUser;
-
-            return;
-
+            return await this.updateUserAuthData(userAccount)
 
         } catch (error: unknown) {
 
@@ -208,9 +187,7 @@ export class AuthService {
     }
 
 
-    // Util methods
-    // Support service methods to the class
-    // from here onwards
+    // Util functions
     private async refresh(refreshStr: string): Promise<string | undefined> {
 
         const refreshToken = await this.retrieveRefreshToken(refreshStr);
@@ -233,7 +210,7 @@ export class AuthService {
             userId: refreshToken.userId,
         };
 
-        return sign(accessToken, 'topSecretAccess', { expiresIn: '1h' });
+        return sign(accessToken, 'topSecretAccess', { expiresIn: '2h' });
     }
 
     private async newRefreshAndAccessToken(user: User, values: { userAgent: string; ipAddress: string },): Promise<{ accessToken: string; refreshToken: string; userData: {} }> {
@@ -278,14 +255,19 @@ export class AuthService {
             const decoded = verify(refreshStr, 'topSecretRefresh');
 
             console.log(decoded)
+
             if (typeof decoded === 'string') {
                 return undefined;
             }
+
             return Promise.resolve(
                 this.refreshTokens.find((token) => token.id === decoded.id),
             );
+
         } catch (e) {
+
             return undefined;
+
         }
 
     }
@@ -406,6 +388,21 @@ export class AuthService {
         }
 
         await setDoc(docRef, UserShazam)
+    }
+
+    private updateUserAuthData(userAccount: Omit<UserAccount, 'uid'>) {
+
+        const user = this.firebaseService.auth.currentUser;
+
+        updateEmail(user, userAccount.email).then(() => {
+
+            return 'success'
+
+        }).catch((error) => {
+            // An error occurred
+            // ...
+        });
+
     }
 
     private sendResetPassword(email: string) {

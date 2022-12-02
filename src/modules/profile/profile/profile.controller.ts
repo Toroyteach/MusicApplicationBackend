@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Put, Body, Param, Post, UseInterceptors, UploadedFile, FileTypeValidator, MaxFileSizeValidator, ParseFilePipe } from '@nestjs/common';
+import { Controller, Get, UseGuards, Patch, Body, Param, Post, UseInterceptors, UploadedFile, FileTypeValidator, MaxFileSizeValidator, ParseFilePipe } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/modules/auth/auth/guards/jtw-auth.guard';
 import { ProfileService } from './profile.service';
@@ -16,7 +16,7 @@ export class ProfileController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put(':id')
+  @Patch(':id')
   async update(@Param('id') id: string, @Body() body: User) {
     return await this.profileService.updateUserData(id, body)
   }

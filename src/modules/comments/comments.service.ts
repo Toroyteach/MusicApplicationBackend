@@ -20,7 +20,6 @@ export class CommentsService {
 
       createCommentDto.userId = user.uid;
 
-      //TODO: create userimage and details refreence in the DTO
       const userComment: CreateCommentDto = {
         ...createCommentDto
       } as CreateCommentDto;

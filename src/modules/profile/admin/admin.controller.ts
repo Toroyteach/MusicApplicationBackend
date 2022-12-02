@@ -19,12 +19,12 @@ export class AdminController {
     return this.adminService.disableUser(id);
   }
 
-  @Put()
+  @Patch()
   updateAppSettings(@Body() updateAdminDto: UpdateAdminDto) {
     return this.adminService.updateAppSettings(updateAdminDto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   disableMixitem(@Param('id') id: string, @Body() body: any) {
     return this.adminService.disableMixItem(id, body);
   }
@@ -44,7 +44,7 @@ export class AdminController {
     return this.adminService.getAllMixItems()
   }
 
-  @Put(':id')
+  @Patch(':id')
   updateMixItem(@Param('id') id: string, @Body() updateMixItem: UpdateMixItemDto) {
     return this.adminService.updateMixItem(id, updateMixItem)
   }
