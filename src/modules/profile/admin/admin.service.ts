@@ -4,7 +4,7 @@ import { UpdateAdminDto } from './dto/update-admin.dto';
 import { UpdateMixItemDto } from './dto/update-mix-item.dto';
 import { getAuth } from 'firebase/auth'
 import * as admin from "firebase-admin";
-import { updateDoc, DocumentReference, doc, addDoc, getDocs, CollectionReference, collection, DocumentData, deleteDoc } from 'firebase/firestore'
+import { updateDoc, DocumentReference, doc, addDoc, getDocs, CollectionReference, collection, deleteDoc } from 'firebase/firestore'
 import { User } from 'src/modules/auth/models/user.model';
 import { UserAccount } from 'src/modules/auth/models/userAccount.model';
 import { FirebaseService } from 'src/firebase/firebase.service';

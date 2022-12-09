@@ -17,12 +17,16 @@ export class AuthController {
     });
   }
 
-
   @Post('register')
   public register(@Body() body: Omit<User, 'id'>) {
     return this.authService.register(body);
   }
 
+
+  @Post('refresh')
+  async refreshToken(@Body() body: RefreshTokenDto) {
+    return this.authService.refreshToken(body.refreshToken);
+  }
 
   @Delete('logout')
   public logout(@Body() body: RefreshTokenDto) {

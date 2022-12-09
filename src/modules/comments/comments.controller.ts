@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/auth/guards/jtw-auth.guard';
 
 @Controller('comments')
 export class CommentsController {
-  
+
   constructor(private readonly commentsService: CommentsService) { }
 
   @UseGuards(JwtAuthGuard)
@@ -44,5 +44,11 @@ export class CommentsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.commentsService.remove(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  disableComment(@Param('id') id: string, @Body() status: string) {
+    return this.commentsService.disableComment(id, status);
   }
 }

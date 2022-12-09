@@ -65,6 +65,7 @@ export class CommentsService {
 
   //this method is for the administrator
   public async findAll(): Promise<any> {
+
     try {
 
       const commentsCollection: CollectionReference = collection(this.firebaseService.firestore, 'comments');
@@ -104,6 +105,7 @@ export class CommentsService {
   }
 
   public async update(id: string, updateCommentDto: UpdateCommentDto) {
+
     try {
 
       const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, id);
@@ -124,6 +126,7 @@ export class CommentsService {
   }
 
   public async remove(id: string) {
+
     try {
 
       const docRefUsersComments: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, id);
@@ -139,5 +142,27 @@ export class CommentsService {
       throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
 
     }
+  }
+
+  public async disableComment(id: string, status: string): Promise<any> {
+
+    try {
+
+      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, id);
+
+      await updateDoc(docRefUsersDetails, {
+        status
+      });
+
+      return { status: "succes" }
+
+    } catch (error: unknown) {
+
+      console.warn(`[ERROR]: ${error}`)
+
+      throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
+
+    }
+
   }
 }

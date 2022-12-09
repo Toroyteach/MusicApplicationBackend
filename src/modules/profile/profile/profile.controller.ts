@@ -21,7 +21,7 @@ export class ProfileController {
     return await this.profileService.updateUserData(id, body)
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('profileImage')
   @UseInterceptors(FileInterceptor('file'))
   async updateImage(@UploadedFile(
@@ -35,25 +35,25 @@ export class ProfileController {
     return await this.profileService.updateUserImage(file)
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('updateUserProfileSettings')
   async updateUserSettings(@Body() body: UserDetails) {
     return await this.profileService.updateUserSettings(body)
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('getUserDalleImages')
   async getUserDalleImage() {
     return await this.profileService.getUserDalleImages()
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('downloadUserDalleImage/:id')
   async downloadUserDalleImage(@Param('id') id: string) {
     return await this.profileService.downloadAiImage(id)
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('deleteUserAccount')
   async deleteUserAccount() {
     return await this.profileService.deleteUserAccountPlusData()

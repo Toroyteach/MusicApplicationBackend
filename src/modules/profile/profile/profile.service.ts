@@ -19,6 +19,7 @@ export class ProfileService {
         try {
 
             const user = this.firebaseService.auth.currentUser;
+            
             const userData = await this.getData(user.uid)
 
             return userData;

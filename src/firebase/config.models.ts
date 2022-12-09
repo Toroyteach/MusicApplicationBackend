@@ -9,4 +9,10 @@ export interface Config {
 
     //JWT Tokens
     secretOrKey: string,
+
+    //NASA Keys
+    nasaApiKey: string,
+
+    //Dalle Key
+    openAiKey: string,
 }

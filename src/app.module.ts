@@ -20,10 +20,11 @@ import { AdminModule } from './modules/profile/admin/admin.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { RatingsModule } from './modules/ratings/ratings.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
+import { GatewayModule } from './modules/gateway/gateway.module';
 
 @Module({
   imports: [ JwtModule.register({ secret, signOptions: { expiresIn: '2h' } }), ConfigModule.forRoot({ isGlobal: true }), 
-  AuthModule, ProfileModule, ProfileModule, MusicModule, ChatsModule, CommentsModule, AdminModule, NotificationModule, RatingsModule, FeedbackModule],
+  AuthModule, ProfileModule, ProfileModule, MusicModule, ChatsModule, CommentsModule, AdminModule, NotificationModule, RatingsModule, FeedbackModule, GatewayModule],
   //controllers: [AppController, ProfileController],
   //providers: [AppService, FirebaseService, ProfileService, JwtService],
 })

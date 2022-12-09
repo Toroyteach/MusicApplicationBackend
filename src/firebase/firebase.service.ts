@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, getAuth } from 'firebase/auth';
 import { Config } from 'src/firebase/config.models';
 
-import { CollectionReference, Firestore, getFirestore, collection } from 'firebase/firestore'
-import { FirebaseStorage, getStorage } from 'firebase/storage';
+import * as admin from "firebase-admin";
+import { Auth, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, signOut, deleteUser, sendPasswordResetEmail, updateEmail, updateProfile } from 'firebase/auth';
+import { updateDoc, DocumentReference, doc, addDoc, getDocs, CollectionReference, collection, deleteDoc, Firestore, getFirestore } from 'firebase/firestore'
+import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes, deleteObject, listAll } from "firebase/storage";
 
 @Injectable()
 export class FirebaseService {
@@ -23,9 +24,7 @@ export class FirebaseService {
     public mixItemsCollection: CollectionReference;
     public notificationCollection: CollectionReference;
     public feedbackCollection: CollectionReference;
-
-
-    
+    public usersGeneratedImage: CollectionReference
 
     constructor(private configService: ConfigService<Config>) {
         this.app = initializeApp({
@@ -55,6 +54,7 @@ export class FirebaseService {
         this.mixItemsCollection = collection(this.firestore, 'mixItems')
         this.notificationCollection = collection(this.firestore, 'notifications')
         this.feedbackCollection = collection(this.firestore, 'feedback')
-    }
+        this.usersGeneratedImage = collection(this.firestore, 'usersGeneratedImage')
+    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
 
 }

@@ -7,9 +7,7 @@ import { UserFavourite } from '../models/userFavourites.model';
 import { UserShazam } from '../models/userShazam.model';
 import RefreshToken from './entities/refresh-token.entity';
 import { sign, verify } from 'jsonwebtoken';
-
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail, updateEmail } from 'firebase/auth'
-
 import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { JwtService } from '@nestjs/jwt';
 import { UserAccount } from '../models/userAccount.model';
@@ -118,6 +116,20 @@ export class AuthService {
             throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
         }
 
+    }
+
+    public async refreshToken(refreshStr: string): Promise<any> {
+        try {
+
+            //await this.refresh(token)
+
+        } catch (error: unknown) {
+
+            console.warn(`[ERROR]: ${error}`)
+
+            throw new HttpException('Error Retreiving Refresh Token', HttpStatus.SERVICE_UNAVAILABLE);
+
+        }
     }
 
     public async deleteAccount(refreshStr): Promise<void> {
