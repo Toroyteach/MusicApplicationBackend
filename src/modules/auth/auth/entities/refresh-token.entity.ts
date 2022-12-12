@@ -1,5 +1,6 @@
-
-import { sign } from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
+import { sign } from 'jsonwebtoken'
+import { Config } from 'src/firebase/config.models';
 
 class RefreshToken {
   constructor(init?: Partial<RefreshToken>) {
@@ -13,7 +14,10 @@ class RefreshToken {
   userEmail: string;
 
   sign(): string {
-    return sign({ ...this }, 'topSecretRefresh');
+
+    const refreshSecrete = 'D57684B7221F533C1F23F31FD3949'//this.configService.get<string>('REFRESH_SECRET')
+
+    return sign({ ...this }, refreshSecrete);
   }
 }
 

@@ -12,7 +12,7 @@ import { JwtAuthGuard } from '../auth/auth/guards/jtw-auth.guard';
 export class MusicController {
   constructor(private readonly musicService: MusicService) { }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Get('mix/:id')
   async downloadMixItem(@Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
 

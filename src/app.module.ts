@@ -21,6 +21,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { RatingsModule } from './modules/ratings/ratings.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
+import { MusicController } from './modules/music/music.controller';
 
 @Module({
   imports: [ JwtModule.register({ secret, signOptions: { expiresIn: '2h' } }), ConfigModule.forRoot({ isGlobal: true }), 
@@ -30,10 +31,10 @@ import { GatewayModule } from './modules/gateway/gateway.module';
 })
 export class AppModule {
 
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(CommentsMiddleware)
-      .forRoutes(CommentsController);
-  }
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer
+  //     .apply(AppSettingsMiddleware)
+  //     .forRoutes(MusicController);
+  // }
 
 }

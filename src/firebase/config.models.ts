@@ -9,6 +9,8 @@ export interface Config {
 
     //JWT Tokens
     secretOrKey: string,
+    REFRESH_SECRET: string,
+    ACCESS_SECRET: string,
 
     //NASA Keys
     nasaApiKey: string,

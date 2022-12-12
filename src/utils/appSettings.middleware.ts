@@ -8,5 +8,6 @@ export class AppSettingsMiddleware implements NestMiddleware {
 
     console.log(req);
     next();
+
   }
 }

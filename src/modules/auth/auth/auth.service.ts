@@ -11,13 +11,15 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredent
 import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { JwtService } from '@nestjs/jwt';
 import { UserAccount } from '../models/userAccount.model';
+import { ConfigService } from '@nestjs/config';
+import { Config } from 'src/firebase/config.models';
 
 @Injectable()
 export class AuthService {
 
     private refreshTokens: RefreshToken[] = [];
 
-    constructor(private firebaseService: FirebaseService, private jwtTokenService: JwtService) { }
+    constructor(private firebaseService: FirebaseService, private jwtTokenService: JwtService, private configService: ConfigService<Config>) { }
 
     public async login(email: string, password: string, values: { userAgent: string; ipAddress: string }): Promise<any> {
 
@@ -121,7 +123,7 @@ export class AuthService {
     public async refreshToken(refreshStr: string): Promise<any> {
         try {
 
-            //await this.refresh(token)
+            return await this.refresh(refreshStr)
 
         } catch (error: unknown) {
 
@@ -222,7 +224,9 @@ export class AuthService {
             userId: refreshToken.userId,
         };
 
-        return sign(accessToken, 'topSecretAccess', { expiresIn: '2h' });
+        const accessSecret = this.configService.get<string>('ACCESS_SECRET')
+
+        return sign(accessToken, accessSecret, { expiresIn: '2h' });
     }
 
     private async newRefreshAndAccessToken(user: User, values: { userAgent: string; ipAddress: string },): Promise<{ accessToken: string; refreshToken: string; userData: {} }> {
@@ -240,6 +244,7 @@ export class AuthService {
             const userData = await this.getUserData(user.id)
 
             //TODO: get the user pending notifications and send back pending count or id.
+            const accessSecrete = this.configService.get<string>('ACCESS_SECRET')
 
             return {
                 refreshToken: refreshObject.sign(),
@@ -248,7 +253,7 @@ export class AuthService {
                         userId: user.id,
                         userEmail: user.email,
                     },
-                    'topSecretAccess',
+                    accessSecrete,
                     {
                         expiresIn: '1h',
                     },
@@ -264,7 +269,10 @@ export class AuthService {
     private retrieveRefreshToken(refreshStr: string): Promise<RefreshToken | undefined> {
 
         try {
-            const decoded = verify(refreshStr, 'topSecretRefresh');
+
+            const refreshSecrete = this.configService.get<string>('REFRESH_SECRET')
+
+            const decoded = verify(refreshStr, refreshSecrete);
 
             console.log(decoded)
 
