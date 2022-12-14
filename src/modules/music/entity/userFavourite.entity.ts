@@ -1,5 +1,5 @@
 export class UserFavourites {
     title: string;
-    artiste: string;
+    artist: string;
     mixId: string;
 }

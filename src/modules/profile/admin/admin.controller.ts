@@ -10,55 +10,55 @@ import { UpdateMixItemDto } from './dto/update-mix-item.dto';
 export class AdminController {
   constructor(private readonly adminService: AdminService) { }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Get()
   findAllUsers() {
     return this.adminService.findAllUsers();
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Get(':id')
   disableUser(@Param('id') id: string) {
     return this.adminService.disableUser(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Patch()
   updateAppSettings(@Body() updateAdminDto: UpdateAdminDto) {
     return this.adminService.updateAppSettings(updateAdminDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Patch(':id')
   disableMixitem(@Param('id') id: string, @Body() body: any) {
     return this.adminService.disableMixItem(id, body);
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Get()
   getUsersDalleGenImages() {
     return this.adminService.getUsersDalleGenImages();
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createMixItemDto: CreateMixItemDto) {
     return this.adminService.createMixItem(createMixItemDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Get()
   getAllMixItems() {
     return this.adminService.getAllMixItems()
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Patch(':id')
   updateMixItem(@Param('id') id: string, @Body() updateMixItem: UpdateMixItemDto) {
     return this.adminService.updateMixItem(id, updateMixItem)
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Delete(':id')
   deleteMixItem(@Param('id') id: string) {
     return this.adminService.deleteMixItem(id)

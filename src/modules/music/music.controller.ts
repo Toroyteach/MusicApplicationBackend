@@ -7,6 +7,7 @@ import { UserFavourite } from '../auth/models/userFavourites.model';
 import { UserHistory } from '../auth/models/userHistory.model';
 import { DalleRequestE } from './entity/dalleRequest.entity';
 import { JwtAuthGuard } from '../auth/auth/guards/jtw-auth.guard';
+import { ShazamRequest } from './entity/shazamrequest.entity';
 
 @Controller('music')
 export class MusicController {
@@ -30,7 +31,7 @@ export class MusicController {
   }
 
   //this is responsible for downloadiong the next clipped mix item
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Get('clippedMix/:id')
   async downloadClippedMixItem(@Res({ passthrough: true }) res: Response): Promise<any> {
     const mixItem = await this.musicService.downloadClippedMixItem()
@@ -46,24 +47,24 @@ export class MusicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post(':id')
-  async addUserHistory(@Param('id') id: string, @Body() userHistory: UserHistory): Promise<any> {
-    return this.musicService.addHistoryListens(id, userHistory)
+  @Post('addUserHistory')
+  async addUserHistory(@Body() userHistory: UserHistory): Promise<any> {
+    return this.musicService.addHistoryListens(userHistory)
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post(':id')
-  async addFavouritesMixList(@Param('id') id: string, @Body() userFavourite: UserFavourite): Promise<any> {
-    return this.musicService.addFavouritesMixList(id, userFavourite)
+  @Post('addUserFavourite')
+  async addFavouritesMixList(@Body() userFavourite: UserFavourite): Promise<any> {
+    return this.musicService.addFavouritesMixList(userFavourite)
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  async deleteFavouritesMixItem(@Param('id') id: string, @Body() userFavourite: UserFavourite): Promise<any> {
-    return this.musicService.deleteFavouriteMix(id, userFavourite)
+  @Delete('deleteUserFavourite')
+  async deleteFavouritesMixItem(@Body() userFavourite: UserFavourite): Promise<any> {
+    return this.musicService.deleteFavouriteMix(userFavourite)
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Get('calmAnxiety')
   async getCalmAnxietyVideo(): Promise<StreamableFile> {
     const todaysVideo = await this.musicService.getCalmAnxietyVideo()
@@ -79,14 +80,20 @@ export class MusicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('nasaPic/')
+  @Get('nasaPic')
   async getNasaPicOfDay(): Promise<{}> {
     return this.musicService.getNasaPicOfDay();
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Post('generateAiImage')
   async createDalleAiImages(@Body() userRequestBody: DalleRequestE): Promise<any> {
     return this.musicService.createDalleAiImages(userRequestBody)
+  }
+
+  //@UseGuards(JwtAuthGuard)
+  @Post('generateShazamReq')
+  async createShazamReq(@Body() userShazamBody: ShazamRequest): Promise<any> {
+    return this.musicService.createShazamRequest(userShazamBody)
   }
 }

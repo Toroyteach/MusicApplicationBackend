@@ -51,7 +51,7 @@ export class AuthService {
 
     }
 
-    public async register(body: Omit<User, 'id'>): Promise<void> {
+    public async register(body: Omit<User, 'id'>): Promise<{}> {
 
         try {
 
@@ -72,6 +72,8 @@ export class AuthService {
                 this.createNewUserFavouritesDetails(userCredential);
 
                 this.createNewUserShazamDetails(userCredential);
+
+                return { status: "succes", data: body }
             }
 
         } catch (error: unknown) {
@@ -405,6 +407,10 @@ export class AuthService {
             id: 'null',
             title: 'null',
             artist: 'null',
+            mixId: 'null',
+            timeSearched: 'null',
+            userId: 'null',
+            coverArt: 'null',
         }
 
         await setDoc(docRef, UserShazam)

@@ -1,4 +1,4 @@
-export class UserShazam {
+export class ShazamRequest {
     id: string;
     mixId: string;
     timeSearched: string;

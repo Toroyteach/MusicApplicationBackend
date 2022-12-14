@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { updateDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc } from 'firebase/firestore'
+import { updateDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc, collection, CollectionReference } from 'firebase/firestore'
 import { getDownloadURL, getStorage, ref, uploadBytes, deleteObject, listAll } from "firebase/storage";
 import { updateProfile } from 'firebase/auth';
 
@@ -19,7 +19,7 @@ export class ProfileService {
         try {
 
             const user = this.firebaseService.auth.currentUser;
-            
+
             const userData = await this.getData(user.uid)
 
             return userData;
@@ -33,11 +33,11 @@ export class ProfileService {
 
     }
 
-    public async updateUserData(id: string, userData: User): Promise<any> {
+    public async updateUserData(userData: User): Promise<any> {
 
         try {
 
-            return await this.updateProfileData(id, userData);
+            return await this.updateProfileData(userData);
 
         } catch (error: unknown) {
 
@@ -124,7 +124,7 @@ export class ProfileService {
 
 
     //helper Methods
-    private async getData(id: string): Promise<any> {
+    private async getData(id: string): Promise<{}> {
 
         const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, id);
 
@@ -137,13 +137,17 @@ export class ProfileService {
         return userData;
     }
 
-    private async updateProfileData(id: string, newData: Omit<User, 'email'>): Promise<any> {
+    private async updateProfileData(newData: Omit<User, 'email'>): Promise<any> {
 
-        const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, id);
+        const user = this.firebaseService.auth.currentUser;
+
+        const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, user.uid);
 
         await updateDoc(docRefUsersDetails, {
             ...newData
         });
+
+        return { status: "succes", data: newData }
     }
 
     private async updateProfileImage(file): Promise<any> {
@@ -152,17 +156,23 @@ export class ProfileService {
 
         //TODO: check file extension
         //TODO: Check if file exists and delete
-        this.checkIfFileExists
+        const checkFile = this.checkIfFileExists
 
-        const fileRef = ref(this.firebaseService.storage, 'profileImages/' + user.uid + '.png');
+        if (!checkFile) {
 
-        const snapshot = await uploadBytes(fileRef, file);
+            const fileRef = ref(this.firebaseService.storage, 'profileImages/' + user.uid + '.png');
 
-        const photoURL = await getDownloadURL(fileRef);
+            const snapshot = await uploadBytes(fileRef, file);
 
-        updateProfile(user, { photoURL });
+            const photoURL = await getDownloadURL(fileRef);
 
-        console.log({ status: 'success', pic: user.photoURL })
+            updateProfile(user, { photoURL });
+
+            console.log({ status: 'success', pic: user.photoURL })
+        }
+
+        console.log(checkFile)
+
     }
 
     //check if image exist in storage
@@ -203,6 +213,8 @@ export class ProfileService {
         await updateDoc(docRefUserAppSettings, {
             ...body
         });
+
+        return { status: "succes", data: body }
     }
 
     private async deleteAccountData(): Promise<any> {
@@ -213,21 +225,23 @@ export class ProfileService {
 
         const docRefDeatils: DocumentReference = doc(this.firebaseService.usersCollection, user.uid);
 
-        //Delete Sub COllections
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersDetails/' + user.uid, 100)
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersFavourites/' + user.uid, 100)
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersHistory/' + user.uid, 100)
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersShazam/' + user.uid, 100)
+        //Delete User Sub COllections
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersDetails/', 100)
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersFavourites/', 100)
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersHistory/', 100)
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersShazam/', 100)
 
         //Delete User Document
         await deleteDoc(docRefDeatils)
+
+        return { status: "succes", data: 'User deleted successfully' }
     }
 
     private async downloadAiGeneratedImages(file: string): Promise<any> {
 
         const storage = this.firebaseService.storage;
 
-        getDownloadURL(ref(storage, 'dalleImages/' + file))
+        return getDownloadURL(ref(storage, 'dalleImages/' + file))
             .then((url) => {
                 // This can be downloaded directly:
                 const xhr = new XMLHttpRequest();
@@ -277,7 +291,11 @@ export class ProfileService {
 
     //Helper function to help delete collections
     private async deleteCollection(db, collectionPath, batchSize) {
+
+        //const collectionRef: CollectionReference = collection(db, collectionPath);
+
         const collectionRef = db.collection(collectionPath);
+
         const query = collectionRef.orderBy('__name__').limit(batchSize);
 
         return new Promise((resolve, reject) => {

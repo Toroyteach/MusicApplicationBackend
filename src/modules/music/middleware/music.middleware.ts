@@ -14,37 +14,39 @@ export class MusicMiddleware implements NestMiddleware {
 
     use(req: Request, res: Response, next: NextFunction) {
 
-        let urlReq = req.route.path;
-        let result_1 = urlReq.slice(6, 18);
+        // let urlReq = req.route.path;
+        // let result_1 = urlReq.slice(6, 18);
 
-        let result_2 = result_1.substring(
-            result_1.indexOf("/") + 1,
-            result_1.lastIndexOf("/")
-        );
+        // let result_2 = result_1.substring(
+        //     result_1.indexOf("/") + 1,
+        //     result_1.lastIndexOf("/")
+        // );
 
-        let keyPhrase = ['mix', 'nasaPic', 'generateAiImage', 'calmAnxiety'];
+        // let keyPhrase = ['mix', 'nasaPic', 'generateAiImage', 'calmAnxiety', 'generateShazamReq'];
 
-        let pattern = new RegExp("\\b" + result_2 + "\\b");;
+        // let pattern = new RegExp("\\b" + result_2 + "\\b");;
 
-        keyPhrase.forEach(word => {
+        // keyPhrase.forEach(word => {
 
-            if (pattern.test(word)) {
+        //     if (pattern.test(word)) {
 
-                const settingResult = this.getAppSettings(word)
+        //         const settingResult = this.getAppSettings(word)
 
-                console.log(settingResult)
+        //         console.log(settingResult)
 
-                if(settingResult){
+        //         if(settingResult){
 
-                    next();
+        //             next();
 
-                } else {
+        //         } else {
 
-                    throw new HttpException('Action is not Authorised.', HttpStatus.UNAUTHORIZED);
-                }
+        //             throw new HttpException('Action is not Authorised.', HttpStatus.UNAUTHORIZED);
+        //         }
 
-            }
-        });
+        //     }
+        // });
+
+        next()
 
     }
 
