@@ -24,7 +24,7 @@ export class FirebaseService {
     public mixItemsCollection: CollectionReference;
     public notificationCollection: CollectionReference;
     public feedbackCollection: CollectionReference;
-    public usersGeneratedImage: CollectionReference
+    public usersGeneratedImage: CollectionReference;
 
     constructor(private configService: ConfigService<Config>) {
         this.app = initializeApp({
@@ -55,8 +55,8 @@ export class FirebaseService {
         this.notificationCollection = collection(this.firestore, 'notifications')
         this.feedbackCollection = collection(this.firestore, 'feedback')
         this.usersGeneratedImage = collection(this.firestore, 'usersGeneratedImage')
-    }                            
-    
+    }
+
     public async getApplicationSettings() {
 
         const docRefUsersDetails: DocumentReference = doc(this.appSettingsCollection, 'uk6P9Jpic6mBylhbvVUR');
@@ -68,6 +68,17 @@ export class FirebaseService {
         }
 
         return appData;
+    }
+
+    public async getMixItemSettings(mixId: string) {
+
+        const docRefMixItem: DocumentReference = doc(this.mixItemsCollection, mixId);
+
+        const snapshotMixItemDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefMixItem);
+
+        const mixData = snapshotMixItemDetails.data()
+
+        return mixData
     }
 
 }

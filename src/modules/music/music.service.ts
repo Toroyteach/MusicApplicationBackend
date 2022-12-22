@@ -1,4 +1,6 @@
-import { Injectable, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { createReadStream } from 'fs';
+import { join } from 'path';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { UserFavourite } from '../auth/models/userFavourites.model';
 import { collection, CollectionReference, DocumentReference, updateDoc, doc, addDoc, query, orderBy, limit, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
@@ -13,18 +15,38 @@ import { DalleRequestE } from './entity/dalleRequest.entity';
 import { ShazamRequest } from './entity/shazamrequest.entity';
 import { map, catchError } from 'rxjs';
 import * as fs from 'fs';
+import { MixDownloadRequest } from './entity/mixDownload.entity';
+import { ClippedMixDownload } from './entity/clippedMix.entity';
 
 @Injectable()
 export class MusicService {
 
     constructor(private firebaseService: FirebaseService, private readonly httpService: HttpService, private configService: ConfigService<Config>) { }
 
-    public async getdownloadMixItem(): Promise<any> {
-        //return the file location and the file to dowwnload
+    public async getdownloadMixItem(body: MixDownloadRequest): Promise<any> {
+
+        var item = body.mixId
+
+        const fileDir = './src/modules/music/mixes/' + item
+
+        if (!fileDir) {
+            throw new NotFoundException();
+        }
+
+        return createReadStream(join(process.cwd(), fileDir));
     }
 
-    public async downloadClippedMixItem(): Promise<any> {
-        //return the next mix clipped item of the mix to download
+    public async downloadClippedMixItem(body: ClippedMixDownload): Promise<any> {
+
+        const item = body.clippedId
+
+        const fileDir = './src/modules/music/clippedMixes/' + body.title + '/' + item
+
+        if (!fileDir) {
+            throw new NotFoundException();
+        }
+
+        return createReadStream(join(process.cwd(), fileDir));
     }
 
     public async addHistoryListens(body: UserFavourite): Promise<any> {
@@ -76,6 +98,18 @@ export class MusicService {
     }
 
     public async getCalmAnxietyVideo(): Promise<any> {
+
+        const videoFIles = ['Stars.mp4', 'Waves.mp4', 'World.mp4']
+
+        var item = videoFIles[Math.floor(Math.random() * videoFIles.length)];
+
+        const fileDir = './src/modules/music/anxietyVideos/' + item
+
+        if (!fileDir) {
+            throw new NotFoundException();
+        }
+
+        return createReadStream(join(process.cwd(), fileDir));
 
     }
 
@@ -159,15 +193,16 @@ export class MusicService {
 
     //Util Methods
     private getUuid(): string {
+        let uuuu = Math.random().toString(32).slice(-4);
         let wwww = Math.random().toString(32).slice(-4);
         let xxxx = Math.random().toString(32).slice(-4);
         let yyyy = Math.random().toString(32).slice(-4);
         let zzzz = Math.random().toString(32).slice(-4);
-
-        const uid: string = wwww + xxxx + yyyy + zzzz;
-
+    
+        const uid: string = wwww + xxxx + yyyy + zzzz + uuuu;
+    
         return uid
-    }
+      }
 
     private async addUserHistoryItems(body: UserFavourite): Promise<any> {
 
@@ -282,7 +317,7 @@ export class MusicService {
                 // }
 
                 // addDalleColl()
-                console.log('success on getting file stream')
+                console.log('success on getting file stream: Todo: store the image on users storage')
 
             }
 

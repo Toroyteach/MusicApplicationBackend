@@ -26,6 +26,8 @@ export class MusicMiddleware implements NestMiddleware {
 
         // let pattern = new RegExp("\\b" + result_2 + "\\b");;
 
+        // console.log(result_2)
+
         // keyPhrase.forEach(word => {
 
         //     if (pattern.test(word)) {
@@ -40,10 +42,11 @@ export class MusicMiddleware implements NestMiddleware {
 
         //         } else {
 
-        //             throw new HttpException('Action is not Authorised.', HttpStatus.UNAUTHORIZED);
+        //             throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
         //         }
 
         //     }
+
         // });
 
         next()

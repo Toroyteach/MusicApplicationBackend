@@ -1,49 +1,45 @@
-import { Controller, Get, StreamableFile, Res, Post, Patch, Body, Param, Delete, UseGuards } from '@nestjs/common';
-import { createReadStream } from 'fs';
+import { Controller, Get, StreamableFile, Res, Post, Body, Delete, UseGuards } from '@nestjs/common';
 import { MusicService } from './music.service';
-import { join } from 'path';
 import type { Response } from 'express';
 import { UserFavourite } from '../auth/models/userFavourites.model';
 import { UserHistory } from '../auth/models/userHistory.model';
 import { DalleRequestE } from './entity/dalleRequest.entity';
 import { JwtAuthGuard } from '../auth/auth/guards/jtw-auth.guard';
 import { ShazamRequest } from './entity/shazamrequest.entity';
+import { MixDownloadRequest } from './entity/mixDownload.entity';
+import { ClippedMixDownload } from './entity/clippedMix.entity';
 
 @Controller('music')
 export class MusicController {
   constructor(private readonly musicService: MusicService) { }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('mix/:id')
-  async downloadMixItem(@Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
+  async downloadMixItem(@Body() downloadRequest: MixDownloadRequest, @Res({ passthrough: true }) response: Response): Promise<StreamableFile> {
 
-    const mixItem = await this.musicService.getdownloadMixItem()
+    const mixItem = await this.musicService.getdownloadMixItem(downloadRequest)
 
-    const file = createReadStream(join(process.cwd(), mixItem));
+    response.set({
+      'Content-Disposition': `inline; filename="${mixItem.filename}"`,
+      'Content-Type': mixItem.mimetype
+    })
 
-    res.set({
-      'Content-Type': 'application/json',
-      'Content-Disposition': 'attachment; filename="package.json"',
-    });
-
-    return new StreamableFile(file);
+    return new StreamableFile(mixItem);
 
   }
 
-  //this is responsible for downloadiong the next clipped mix item
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('clippedMix/:id')
-  async downloadClippedMixItem(@Res({ passthrough: true }) res: Response): Promise<any> {
-    const mixItem = await this.musicService.downloadClippedMixItem()
+  async downloadClippedMixItem(@Body() clippedId: ClippedMixDownload, @Res({ passthrough: true }) response: Response): Promise<any> {
 
-    const file = createReadStream(join(process.cwd(), mixItem));
+    const clippedItem = await this.musicService.downloadClippedMixItem(clippedId)
 
-    res.set({
-      'Content-Type': 'application/json',
-      'Content-Disposition': 'attachment; filename="package.json"',
-    });
+    response.set({
+      'Content-Disposition': `inline; filename="${clippedItem.filename}"`,
+      'Content-Type': clippedItem.mimetype
+    })
 
-    return new StreamableFile(file);
+    return new StreamableFile(clippedItem);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -64,19 +60,18 @@ export class MusicController {
     return this.musicService.deleteFavouriteMix(userFavourite)
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('calmAnxiety')
-  async getCalmAnxietyVideo(): Promise<StreamableFile> {
+  async getCalmAnxietyVideo(@Res({ passthrough: true }) response: Response): Promise<StreamableFile> {
+
     const todaysVideo = await this.musicService.getCalmAnxietyVideo()
 
-    const file = createReadStream(join(process.cwd(), todaysVideo));
+    response.set({
+      'Content-Disposition': `inline; filename="${todaysVideo.filename}"`,
+      'Content-Type': todaysVideo.mimetype
+    })
 
-    // res.set({
-    //   'Content-Type': 'application/json',
-    //   'Content-Disposition': 'attachment; filename="package.json"',
-    // });
-
-    return new StreamableFile(file);
+    return new StreamableFile(todaysVideo);
   }
 
   @UseGuards(JwtAuthGuard)

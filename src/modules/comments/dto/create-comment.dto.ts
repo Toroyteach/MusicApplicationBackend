@@ -7,4 +7,5 @@ export class CreateCommentDto {
     userId: string;
     userPic: string;
     username: string;
+    commentId: string;
 }

@@ -2,8 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { getAuth } from 'firebase/auth';
-import { collection, CollectionReference, DocumentReference, updateDoc, doc, addDoc, query, orderBy, limit, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { CollectionReference, DocumentReference, updateDoc, doc, query, orderBy, limit, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
 
 @Injectable()
 export class CommentsService {
@@ -14,17 +13,20 @@ export class CommentsService {
 
     try {
 
-      const auth = getAuth();
+      const user = this.firebaseService.auth.currentUser;
 
-      const user = auth.currentUser;
+      const commentId = this.getUuid()
 
       createCommentDto.userId = user.uid;
+      createCommentDto.commentId = commentId;
 
       const userComment: CreateCommentDto = {
         ...createCommentDto
       } as CreateCommentDto;
 
-      await addDoc(this.firebaseService.musicMixCommentsCollection, userComment)
+      const docRef: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, commentId)
+
+      await setDoc(docRef, userComment)
 
       return { status: "succes", data: userComment }
 
@@ -38,21 +40,22 @@ export class CommentsService {
 
   }
 
-  public async getMixComments(mixId: string): Promise<any> {
+  //this method is for the administrator
+  public async findAll(): Promise<any> {
 
     try {
 
-      const commentsCollectionRef: CollectionReference = collection(this.firebaseService.firestore, 'comments');
+      const commentsCollection: CollectionReference = this.firebaseService.musicMixCommentsCollection
 
-      const commentsQuery = query(commentsCollectionRef, where("mixItemId", "==", mixId), orderBy("dateCreated"), limit(100));
+      const commentsSnapshot = await getDocs(commentsCollection);
 
-      const messagesSnapshot = await getDocs(commentsQuery);
+      const comments = []
 
-      const comments = [];
+      commentsSnapshot.forEach(doc => {
+        comments.push(doc.data())
+      })
 
-      messagesSnapshot.forEach(doc => comments.push(doc.data()));
-
-      return { status: "succes", data: comments }
+      return { status: "success", data: comments }
 
     } catch (error: unknown) {
 
@@ -63,22 +66,21 @@ export class CommentsService {
     }
   }
 
-  //this method is for the administrator
-  public async findAll(): Promise<any> {
+  public async getMixComments(mixId: string): Promise<any> {
 
     try {
 
-      const commentsCollection: CollectionReference = collection(this.firebaseService.firestore, 'comments');
+      const commentsCollectionRef: CollectionReference = this.firebaseService.musicMixCommentsCollection
 
-      const commentsSnapshot = await getDocs(commentsCollection);
+      const commentsQuery = query(commentsCollectionRef, where("mixItemId", "==", mixId), orderBy("dateCreated"), limit(100));
 
-      const comments = []
+      const messagesSnapshot = await getDocs(commentsQuery);
 
-      commentsSnapshot.forEach(doc => {
-        comments.push(doc.data())
-      })
+      const comments = [];
 
-      return { status: "succes", data: comments }
+      messagesSnapshot.forEach(doc => comments.push(doc.data()));
+
+      return { status: "success", data: comments }
 
     } catch (error: unknown) {
 
@@ -90,9 +92,23 @@ export class CommentsService {
   }
 
   //get all the comments of one user
-  public async findUsersComments(id: string) {
+  public async findUsersComments() {
 
     try {
+
+      const user = this.firebaseService.auth.currentUser;
+
+      const commentsCollectionRef: CollectionReference = this.firebaseService.musicMixCommentsCollection
+
+      const commentsQuery = query(commentsCollectionRef, where("userId", "==", user.uid), orderBy("dateCreated"), limit(100));
+
+      const messagesSnapshot = await getDocs(commentsQuery);
+
+      const comments = [];
+
+      messagesSnapshot.forEach(doc => comments.push(doc.data()));
+
+      return { status: "success", data: comments }
 
 
     } catch (error: unknown) {
@@ -104,11 +120,11 @@ export class CommentsService {
     }
   }
 
-  public async update(id: string, updateCommentDto: UpdateCommentDto) {
+  public async update(updateCommentDto: UpdateCommentDto) {
 
     try {
 
-      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, id);
+      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, updateCommentDto.commentId);
 
       await updateDoc(docRefUsersDetails, {
         ...updateCommentDto
@@ -133,7 +149,7 @@ export class CommentsService {
 
       await deleteDoc(docRefUsersComments)
 
-      return { status: "succes", data: "Comment deleted successfully" }
+      return { status: "success", data: "Comment deleted successfully" }
 
     } catch (error: unknown) {
 
@@ -144,17 +160,17 @@ export class CommentsService {
     }
   }
 
-  public async disableComment(id: string, status: string): Promise<any> {
+  public async disableComment(updateCommentDto: UpdateCommentDto): Promise<any> {
 
     try {
 
-      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, id);
+      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, updateCommentDto.commentId);
 
       await updateDoc(docRefUsersDetails, {
-        status
+        ...updateCommentDto
       });
 
-      return { status: "succes" }
+      return { status: "success", msg : "Comment has been "+updateCommentDto.status }
 
     } catch (error: unknown) {
 
@@ -164,5 +180,18 @@ export class CommentsService {
 
     }
 
+  }
+
+  //Utill functions to be used
+  private getUuid(): string {
+    let uuuu = Math.random().toString(32).slice(-4);
+    let wwww = Math.random().toString(32).slice(-4);
+    let xxxx = Math.random().toString(32).slice(-4);
+    let yyyy = Math.random().toString(32).slice(-4);
+    let zzzz = Math.random().toString(32).slice(-4);
+
+    const uid: string = wwww + xxxx + yyyy + zzzz + uuuu;
+
+    return uid
   }
 }

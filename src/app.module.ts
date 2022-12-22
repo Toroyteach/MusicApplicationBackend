@@ -7,7 +7,6 @@ import { ConfigModule } from '@nestjs/config';
 import { ProfileModule } from './modules/profile/profile/profile.module';
 import { ProfileController } from './modules/profile/profile/profile.controller';
 import { CommentsController } from './modules/comments/comments.controller';
-import { CommentsMiddleware } from './utils/comments.middleware';
 import { AppSettingsMiddleware } from './utils/appSettings.middleware';
 import { ProfileService } from './modules/profile/profile/profile.service';
 import { JwtService } from '@nestjs/jwt';

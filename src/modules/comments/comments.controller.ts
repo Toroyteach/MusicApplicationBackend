@@ -9,46 +9,45 @@ export class CommentsController {
 
   constructor(private readonly commentsService: CommentsService) { }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createCommentDto: CreateCommentDto) {
     return this.commentsService.create(createCommentDto);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Get()
+  @UseGuards(JwtAuthGuard)
+  @Get('allComments')
   findAll() {
     return this.commentsService.findAll();
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Get(':mixId')
+  @UseGuards(JwtAuthGuard)
+  @Get('singleMix/:mixId')
   getMixComments(@Param('mixId') mixId: string) {
     return this.commentsService.getMixComments(mixId);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Get(':id')
-  findUsersComents(@Param('id') id: string) {
-    return this.commentsService.findUsersComments(id);
+  @UseGuards(JwtAuthGuard)
+  @Get('usersComments')
+  findUsersComents() {
+    return this.commentsService.findUsersComments();
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-
-    return this.commentsService.update(id, updateCommentDto);
+  @UseGuards(JwtAuthGuard)
+  @Patch('update')
+  update(@Body() updateCommentDto: UpdateCommentDto) {
+    return this.commentsService.update(updateCommentDto);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete/:id')
   remove(@Param('id') id: string) {
     return this.commentsService.remove(id);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  disableComment(@Param('id') id: string, @Body() status: string) {
-    return this.commentsService.disableComment(id, status);
+  @UseGuards(JwtAuthGuard)
+  @Patch('disable')
+  disableComment(@Body() updateCommentDto: UpdateCommentDto) {
+    return this.commentsService.disableComment(updateCommentDto);
   }
 }

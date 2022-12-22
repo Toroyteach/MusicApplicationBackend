@@ -386,13 +386,13 @@ export class AuthService {
 
         const docRef: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersFavourites', id)
 
-        const UserFavourite: UserFavourite = {
+        const userFavourite: UserFavourite = {
             id: 'null',
             title: 'null',
             artist: 'null',
         }
 
-        await setDoc(docRef, UserFavourite)
+        await setDoc(docRef, userFavourite)
     }
 
     private async createNewUserShazamDetails(userCredential: UserCredential): Promise<void> {
@@ -446,14 +446,15 @@ export class AuthService {
     }
 
     private getUuid(): string {
+        let uuuu = Math.random().toString(32).slice(-4);
         let wwww = Math.random().toString(32).slice(-4);
         let xxxx = Math.random().toString(32).slice(-4);
         let yyyy = Math.random().toString(32).slice(-4);
         let zzzz = Math.random().toString(32).slice(-4);
-
-        const uid: string = wwww + xxxx + yyyy + zzzz;
-
+    
+        const uid: string = wwww + xxxx + yyyy + zzzz + uuuu;
+    
         return uid
-    }
+      }
 
 }

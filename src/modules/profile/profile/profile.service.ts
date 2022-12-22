@@ -1,10 +1,8 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { updateDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc, collection, CollectionReference } from 'firebase/firestore'
+import { updateDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc } from 'firebase/firestore'
 import { getDownloadURL, getStorage, ref, uploadBytes, deleteObject, listAll } from "firebase/storage";
 import { updateProfile } from 'firebase/auth';
-
 import { User } from 'src/modules/auth/models/user.model';
 import { UserDetails } from 'src/modules/auth/models/userDetails.model';
 
@@ -156,7 +154,9 @@ export class ProfileService {
 
         //TODO: check file extension
         //TODO: Check if file exists and delete
-        const checkFile = this.checkIfFileExists
+        const filePath = 'profileImages/' + user.uid + '.png'
+
+        const checkFile = this.checkIfFileExists(filePath)
 
         if (!checkFile) {
 
@@ -171,36 +171,21 @@ export class ProfileService {
             console.log({ status: 'success', pic: user.photoURL })
         }
 
-        console.log(checkFile)
-
     }
 
     //check if image exist in storage
-    private async checkIfFileExists(filePath: string): Promise<any> {
+    private checkIfFileExists(filePath: string): any {
+
         const storage = getStorage();
-        const storageRef = ref(storage, filePath);
+        const starsRef = ref(storage, filePath);
 
-        getDownloadURL(storageRef)
-            .then(url => {
-
-                // delete the image and return true
-                const desertRef = ref(storage, filePath);
-
-                // Delete the file
-                deleteObject(desertRef).then(() => {
-                    // File deleted successfully
-                }).catch((error) => {
-                    // Uh-oh, an error occurred!
-                });
-
-                return Promise.resolve(true);
+        // Get the download URL
+        getDownloadURL(starsRef)
+            .then((url) => {
+                return true
             })
-            .catch(error => {
-                if (error.code === 'storage/object-not-found') {
-                    return Promise.resolve(false);
-                } else {
-                    return Promise.reject(error);
-                }
+            .catch((error) => {
+                return false
             });
     }
 
@@ -219,19 +204,19 @@ export class ProfileService {
 
     private async deleteAccountData(): Promise<any> {
 
-        //TODO: add delete users ratingss, chats, comments, 
-
+        
         const user = this.firebaseService.auth.currentUser;
-
-        const docRefDeatils: DocumentReference = doc(this.firebaseService.usersCollection, user.uid);
-
+        
+        //TODO: add delete users ( ratings, chats, comments )
+        
         //Delete User Sub COllections
         await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersDetails/', 100)
         await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersFavourites/', 100)
         await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersHistory/', 100)
         await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersShazam/', 100)
-
+        
         //Delete User Document
+        const docRefDeatils: DocumentReference = doc(this.firebaseService.usersCollection, user.uid);
         await deleteDoc(docRefDeatils)
 
         return { status: "succes", data: 'User deleted successfully' }
@@ -290,7 +275,7 @@ export class ProfileService {
     }
 
     //Helper function to help delete collections
-    private async deleteCollection(db, collectionPath, batchSize) {
+    private async deleteCollection(db, collectionPath, batchSize): Promise<any> {
 
         //const collectionRef: CollectionReference = collection(db, collectionPath);
 
