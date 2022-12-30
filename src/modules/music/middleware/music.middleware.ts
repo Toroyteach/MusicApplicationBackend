@@ -12,52 +12,39 @@ export class MusicMiddleware implements NestMiddleware {
         this.appSettings = firebaseService.getApplicationSettings()
     }
 
-    use(req: Request, res: Response, next: NextFunction) {
+    async use(req: Request, res: Response, next: NextFunction) {
 
-        // let urlReq = req.route.path;
-        // let result_1 = urlReq.slice(6, 18);
+        let urlReq = req.route.path;
 
-        // let result_2 = result_1.substring(
-        //     result_1.indexOf("/") + 1,
-        //     result_1.lastIndexOf("/")
-        // );
+        let keyPhrase = ['mixDownload', 'astronomy', 'generateAiImage', 'anxietyVideo', 'generateShazamReq'];
 
-        // let keyPhrase = ['mix', 'nasaPic', 'generateAiImage', 'calmAnxiety', 'generateShazamReq'];
+        const settingResult = await this.getAppSettings()
 
-        // let pattern = new RegExp("\\b" + result_2 + "\\b");;
+        keyPhrase.forEach(word => {
 
-        // console.log(result_2)
+            if (urlReq.includes(word)) {
 
-        // keyPhrase.forEach(word => {
+                if (settingResult[word] === true) {
 
-        //     if (pattern.test(word)) {
 
-        //         const settingResult = this.getAppSettings(word)
+                    next();
 
-        //         console.log(settingResult)
+                } else {
 
-        //         if(settingResult){
+                    throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
+                }
 
-        //             next();
+            }
 
-        //         } else {
-
-        //             throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
-        //         }
-
-        //     }
-
-        // });
-
-        next()
+        });
 
     }
 
-    private async getAppSettings(setting: string) {
-        
-        const results =  await this.firebaseService.getApplicationSettings()
+    private async getAppSettings() {
 
-        return results.appData[setting]
+        const results = await this.firebaseService.getApplicationSettings()
+
+        return results.appData
 
     }
 }

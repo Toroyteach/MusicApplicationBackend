@@ -56,25 +56,32 @@ export class RatingsService {
 
   //util functions
   private createUserRating(payload: CreateRatingDto) {
-    const id: string = payload.userId;
+
+    const user = this.firebaseService.auth.currentUser;
+
+    const uid: string = user.uid;
     const mixId: string = payload.mixId
 
-    const docRef: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId, 'usersRatings', id)
+    const docRef: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId, 'usersRatings', uid)
 
-    const userRatings: CreateUserRatingDto = {
+    const userRating: CreateUserRatingDto = {
       rating: payload.rating,
-      userId: payload.userId,
+      userId: uid,
     }
 
-    setDoc(docRef, userRatings)
+    setDoc(docRef, userRating)
+
+    return { status: "success", msg: 'Rating was added successfully' }
   }
 
   private async getUserRating(payload: CreateRatingDto) {
 
-    const id: string = payload.userId
+    const user = this.firebaseService.auth.currentUser;
+
+    const uid: string = user.uid
     const mixId: string = payload.mixId
 
-    const docRefUsersRatings: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId, 'usersRatings', id);
+    const docRefUsersRatings: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId, 'usersRatings', uid);
 
     const snapshotUsersRatings: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersRatings);
 
@@ -87,18 +94,23 @@ export class RatingsService {
   }
 
   private updateUserRating(payload: UpdateRatingDto) {
-    const id: string = payload.userId;
+
+    const user = this.firebaseService.auth.currentUser;
+
+    const uid: string = user.uid
     const mixId: string = payload.mixId
 
-    const docRef: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId, 'usersRatings', id)
+    const docRef: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId, 'usersRatings', uid)
 
     const userRatings: CreateUserRatingDto = {
       rating: payload.rating,
-      userId: payload.userId,
+      userId: uid,
     }
 
     updateDoc(docRef, {
-      userRatings
+      ...payload
     })
+
+    return { status: "success", msg: 'Rating was updated successfully'}
   }
 }

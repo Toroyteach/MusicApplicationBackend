@@ -4,9 +4,12 @@ import { ProfileController } from './profile.controller';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { AuthService } from 'src/modules/auth/auth/auth.service';
 import { JwtStrategy } from 'src/modules/auth/auth/strategies/jwt.strategy';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
-  imports: [],
+  imports: [MulterModule.register({
+    dest: './users/profileImages',
+  })],
   controllers: [ProfileController],
   providers: [ProfileService, FirebaseService, JwtStrategy]
 })

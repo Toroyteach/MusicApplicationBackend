@@ -1,9 +1,12 @@
-import { Controller, Get, UseGuards, Patch, Body, Param, Post, UseInterceptors, UploadedFile, FileTypeValidator, MaxFileSizeValidator, ParseFilePipe } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, UseGuards, Patch, Body, Param, Post, UseInterceptors, UploadedFile, FileTypeValidator, MaxFileSizeValidator, ParseFilePipe, Res, StreamableFile } from '@nestjs/common';
+import type { Response } from 'express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 import { JwtAuthGuard } from 'src/modules/auth/auth/guards/jtw-auth.guard';
 import { ProfileService } from './profile.service';
 import { User } from 'src/modules/auth/models/user.model';
 import { UserDetails } from 'src/modules/auth/models/userDetails.model';
+import { editFileName, imageFileFilter } from './utils/userProfile.Util';
 
 @Controller('profile')
 export class ProfileController {
@@ -23,15 +26,17 @@ export class ProfileController {
 
   //@UseGuards(JwtAuthGuard)
   @Post('profileImage')
-  @UseInterceptors(FileInterceptor('file'))
-  async updateImage(@UploadedFile(
-    new ParseFilePipe({
-      validators: [
-        new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' }),
-        new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 4 }),
-      ],
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './users/profileImages',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
     }),
-  ) file: Express.Multer.File) {
+  )
+  async updateImage(@UploadedFile() file: Express.Multer.File) {
+
     return await this.profileService.updateUserImage(file)
   }
 
@@ -41,22 +46,24 @@ export class ProfileController {
     return await this.profileService.updateUserSettings(body)
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('getUserDalleImages')
   async getUserDalleImage() {
     return await this.profileService.getUserDalleImages()
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('downloadUserDalleImage/:id')
-  async downloadUserDalleImage(@Param('id') id: string) {
-    return await this.profileService.downloadAiImage(id)
-  }
+  async downloadUserDalleImage(@Param('id') id: string, @Res({ passthrough: true }) response: Response): Promise<StreamableFile> {
 
-  //@UseGuards(JwtAuthGuard)
-  @Get('deleteUserAccount')
-  async deleteUserAccount() {
-    return await this.profileService.deleteUserAccountPlusData()
+    const userImage = await this.profileService.downloadAiImage(id)
+
+    response.set({
+      'Content-Disposition': `inline; filename="${userImage.filename}"`,
+      'Content-Type': userImage.mimetype
+    })
+
+    return await new StreamableFile(userImage);
   }
 
 }

@@ -17,6 +17,7 @@ import { map, catchError } from 'rxjs';
 import * as fs from 'fs';
 import { MixDownloadRequest } from './entity/mixDownload.entity';
 import { ClippedMixDownload } from './entity/clippedMix.entity';
+import { SaveGeneratedImage } from './entity/saveUserGenImages.entity';
 
 @Injectable()
 export class MusicService {
@@ -139,7 +140,7 @@ export class MusicService {
 
         const auth = getAuth();
 
-        const user = auth.currentUser;
+        const userid = auth.currentUser.uid;
 
         const configuration = new Configuration({
             apiKey: this.configService.get<string>('openAiKey')
@@ -152,19 +153,26 @@ export class MusicService {
 
         try {
 
-            const response = await openai.createImage({ prompt, n: 1, size: imageSize, });
+            const response = await openai.createImage({ prompt, n: 1, size: imageSize, response_format: "url", user: userid });
 
             const imageUrl = response.data.data[0].url;
 
             const userDalleData = {
                 imageUrl,
                 prompt,
-                userId: user.uid,
+                userId: userid,
             }
 
-            return await this.saveUserGenImage(userDalleData)
+            return await this.saveUserGenImage(userid, userDalleData)
 
-        } catch (error: unknown) {
+        } catch (error) {
+
+            if (error.response) {
+                console.log(error.response.status);
+                console.log(error.response.data);
+            } else {
+                console.log(error.message);
+            }
 
             console.warn(`[ERROR]: ${error}`)
 
@@ -198,13 +206,13 @@ export class MusicService {
         let xxxx = Math.random().toString(32).slice(-4);
         let yyyy = Math.random().toString(32).slice(-4);
         let zzzz = Math.random().toString(32).slice(-4);
-    
-        const uid: string = wwww + xxxx + yyyy + zzzz + uuuu;
-    
-        return uid
-      }
 
-    private async addUserHistoryItems(body: UserFavourite): Promise<any> {
+        const uid: string = wwww + xxxx + yyyy + zzzz + uuuu;
+
+        return uid
+    }
+
+    private async addUserHistoryItems(body: UserHistory): Promise<any> {
 
         const auth = getAuth();
 
@@ -258,12 +266,17 @@ export class MusicService {
 
     }
 
-    private async saveUserGenImage(body): Promise<{}> {
+    private async saveUserGenImage(uid, body): Promise<{}> {
 
-        //TODO: save the image to storage
         const imageName = this.getUuid();
 
-        const writer = fs.createWriteStream('./' + imageName + '.png');
+        const writer = fs.createWriteStream('./users/generatedImages/' + imageName + '.png');
+
+        const userSaveData = {
+            text: body.prompt,
+            userId: uid,
+            imageId: imageName,
+        } as SaveGeneratedImage;
 
         const response = await this.httpService.axiosRef({
             url: body.imageUrl,
@@ -289,40 +302,18 @@ export class MusicService {
 
             if (value === 'Success') {
 
-                // const file = createReadStream()
-                // const imageRef = ref(this.firebaseService.storage, imageName);
-                // const metatype = { contentType: 'png', name: imageName };
-
-                // // const imageUrl = async () => {
-                // //     return await getDownloadURL(imageRef);
-                // // }
-
-                // const userRequest: DalleRequestE = {
-                //     text: body.prompt,
-                //     size: body.size,
-                //     userId: body.userId,
-                //     imageName,
-                // } as DalleRequestE;
-
-                // const addDalleColl = async () => {
-
-                //     await addDoc(this.firebaseService.usersGeneratedImage, userRequest)
-
-                //     await uploadBytes(imageRef, file.buffer, metatype)
-                //         .then((snapshot) => {
-                //             return 'success'
-                //         })
-                //         .catch((error) => console.log(error.message));
-
-                // }
-
                 // addDalleColl()
-                console.log('success on getting file stream: Todo: store the image on users storage')
+                //console.log('success on getting file stream')
+
+            } else {
+
+                console.log('Failed to getting file stream')
 
             }
 
         })
 
+        await addDoc(this.firebaseService.usersGeneratedImage, userSaveData)
 
         return {
             success: true,

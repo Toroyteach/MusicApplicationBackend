@@ -4,9 +4,12 @@ import { MusicController } from './music.controller';
 import { HttpModule } from '@nestjs/axios';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { MusicMiddleware } from './middleware/music.middleware';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, MulterModule.register({
+    dest: './users/generatedImages',
+  })],
   controllers: [MusicController],
   providers: [MusicService, FirebaseService]
 })

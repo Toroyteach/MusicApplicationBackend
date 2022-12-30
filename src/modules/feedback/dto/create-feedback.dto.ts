@@ -1,6 +1,7 @@
 export class CreateFeedbackDto {
     date: string;
     description: string;
-    photoUrl: string;
+    photoId: string;
     title: string;
+    userid: string;
 }

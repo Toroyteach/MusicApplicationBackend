@@ -1,8 +1,8 @@
 export class CreateAdminDto {
     visualizer: boolean;
     astronomy: boolean;
-    shazam: boolean;
-    download: boolean;
+    generateShazamReq: boolean;
+    mixDownload: boolean;
     anxietyVideo: boolean;
     viewOtherUsers: boolean;
     totalDownloaded: number;
@@ -12,4 +12,5 @@ export class CreateAdminDto {
     shazamCount: number;
     dalleCount: number;
     highestFavourites: string;
+    generateAiImage: boolean;
 }

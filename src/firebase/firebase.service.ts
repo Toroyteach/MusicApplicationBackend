@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Config } from 'src/firebase/config.models';
-
-import * as admin from "firebase-admin";
 import { Auth, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, signOut, deleteUser, sendPasswordResetEmail, updateEmail, updateProfile } from 'firebase/auth';
 import { updateDoc, DocumentReference, doc, addDoc, getDocs, CollectionReference, collection, deleteDoc, Firestore, getFirestore, DocumentSnapshot, DocumentData, getDoc } from 'firebase/firestore'
 import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes, deleteObject, listAll } from "firebase/storage";
@@ -12,6 +10,7 @@ import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes, deleteOb
 export class FirebaseService {
 
     public app: FirebaseApp;
+    public adminApp: any;
     public auth: Auth
     public firestore: Firestore
     public storage: FirebaseStorage

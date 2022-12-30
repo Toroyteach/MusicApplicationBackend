@@ -8,20 +8,20 @@ import { JwtAuthGuard } from '../auth/auth/guards/jtw-auth.guard';
 export class RatingsController {
   constructor(private readonly ratingsService: RatingsService) {}
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createRatingDto: CreateRatingDto) {
     return this.ratingsService.create(createRatingDto);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @Get()
   findOne(@Body() getRatingDto: CreateRatingDto) {
     return this.ratingsService.findOne(getRatingDto);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @Patch()
   update(@Body() updateRatingDto: UpdateRatingDto) {
     return this.ratingsService.update(updateRatingDto);
   }

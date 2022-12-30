@@ -8,7 +8,7 @@ import { UserShazam } from '../models/userShazam.model';
 import RefreshToken from './entities/refresh-token.entity';
 import { sign, verify } from 'jsonwebtoken';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail, updateEmail } from 'firebase/auth'
-import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore'
+import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc } from 'firebase/firestore'
 import { JwtService } from '@nestjs/jwt';
 import { UserAccount } from '../models/userAccount.model';
 import { ConfigService } from '@nestjs/config';
@@ -146,8 +146,7 @@ export class AuthService {
 
         try {
 
-            const auth = this.firebaseService.auth;
-            const user = auth.currentUser;
+            const user = this.firebaseService.auth.currentUser;
 
             deleteUser(user).then(() => {
 
@@ -156,7 +155,7 @@ export class AuthService {
                     (refreshToken) => refreshToken.id !== refreshToken.id,
                 );
 
-                return { message: 'Deleted Account Succseffuly' }
+                return this.deleteAccountData(user.uid)
 
             }).catch((error) => {
 
@@ -212,11 +211,9 @@ export class AuthService {
             return undefined;
         }
 
-
         //replace
         const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, refreshToken.userId);
         const snapshotUsersDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersDetails);
-        // const user = await this.firebaseService.findOne(refreshToken.userId);
 
         if (!snapshotUsersDetails.data()) {
             return undefined;
@@ -445,16 +442,73 @@ export class AuthService {
             });
     }
 
+    private async deleteAccountData(uid): Promise<any> {
+
+        //const user = this.firebaseService.auth.currentUser;
+
+        //TODO: add delete users ( ratings, chats, comments )
+
+        //Delete User Sub COllections
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + uid + '/usersDetails/', 100)
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + uid + '/usersFavourites/', 100)
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + uid + '/usersHistory/', 100)
+        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + uid + '/usersShazam/', 100)
+
+        //Delete User Document
+        const docRefDeatils: DocumentReference = doc(this.firebaseService.usersCollection, uid);
+        await deleteDoc(docRefDeatils)
+
+        return { status: "succes", data: 'User deleted successfully' }
+    }
+
+    //Helper function to help delete collections
+    private async deleteCollection(db, collectionPath, batchSize): Promise<any> {
+
+        //const collectionRef: CollectionReference = collection(db, collectionPath);
+
+        const collectionRef = db.collection(collectionPath);
+
+        const query = collectionRef.orderBy('__name__').limit(batchSize);
+
+        return new Promise((resolve, reject) => {
+            this.deleteQueryBatch(db, query, resolve).catch(reject);
+        });
+    }
+
+    private async deleteQueryBatch(db, query, resolve) {
+        const snapshot = await query.get();
+
+        const batchSize = snapshot.size;
+        if (batchSize === 0) {
+            // When there are no documents left, we are done
+            resolve();
+            return;
+        }
+
+        // Delete documents in a batch
+        const batch = db.batch();
+        snapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+
+        // Recurse on the next process tick, to avoid
+        // exploding the stack.
+        process.nextTick(() => {
+            this.deleteQueryBatch(db, query, resolve);
+        });
+    }
+
     private getUuid(): string {
         let uuuu = Math.random().toString(32).slice(-4);
         let wwww = Math.random().toString(32).slice(-4);
         let xxxx = Math.random().toString(32).slice(-4);
         let yyyy = Math.random().toString(32).slice(-4);
         let zzzz = Math.random().toString(32).slice(-4);
-    
+
         const uid: string = wwww + xxxx + yyyy + zzzz + uuuu;
-    
+
         return uid
-      }
+    }
 
 }

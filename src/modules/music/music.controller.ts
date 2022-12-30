@@ -14,7 +14,7 @@ export class MusicController {
   constructor(private readonly musicService: MusicService) { }
 
   @UseGuards(JwtAuthGuard)
-  @Get('mix/:id')
+  @Get('mixDownload/:id')
   async downloadMixItem(@Body() downloadRequest: MixDownloadRequest, @Res({ passthrough: true }) response: Response): Promise<StreamableFile> {
 
     const mixItem = await this.musicService.getdownloadMixItem(downloadRequest)
@@ -61,7 +61,7 @@ export class MusicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('calmAnxiety')
+  @Get('anxietyVideo')
   async getCalmAnxietyVideo(@Res({ passthrough: true }) response: Response): Promise<StreamableFile> {
 
     const todaysVideo = await this.musicService.getCalmAnxietyVideo()
@@ -75,12 +75,12 @@ export class MusicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('nasaPic')
+  @Get('astronomy')
   async getNasaPicOfDay(): Promise<{}> {
     return this.musicService.getNasaPicOfDay();
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('generateAiImage')
   async createDalleAiImages(@Body() userRequestBody: DalleRequestE): Promise<any> {
     return this.musicService.createDalleAiImages(userRequestBody)

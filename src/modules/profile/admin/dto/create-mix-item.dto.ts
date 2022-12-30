@@ -12,4 +12,5 @@ export class CreateMixItemDto {
     coverArt: string;
     status: string;
     allowComments: boolean;
+    mixId: string;
 }

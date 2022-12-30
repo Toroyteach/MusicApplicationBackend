@@ -39,3 +39,6 @@ lerna-debug.log*
 
 #Video files
 *.mp4
+
+#firebase admin credentials
+musicapplication-Accnt.json

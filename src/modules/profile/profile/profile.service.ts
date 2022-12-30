@@ -1,10 +1,13 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { updateDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc } from 'firebase/firestore'
-import { getDownloadURL, getStorage, ref, uploadBytes, deleteObject, listAll } from "firebase/storage";
+import { updateDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc, CollectionReference, query, getDocs, where, limit } from 'firebase/firestore'
+import { getDownloadURL, getStorage, ref, uploadBytes, deleteObject, listAll, uploadBytesResumable, uploadString } from "firebase/storage";
+import * as admin from "firebase-admin";
 import { updateProfile } from 'firebase/auth';
 import { User } from 'src/modules/auth/models/user.model';
 import { UserDetails } from 'src/modules/auth/models/userDetails.model';
+import { createReadStream } from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class ProfileService {
@@ -48,7 +51,7 @@ export class ProfileService {
     }
 
     //this method uploads if missing or updates profile images
-    public async updateUserImage(file): Promise<any> {
+    public async updateUserImage(file: Express.Multer.File): Promise<any> {
         try {
 
             return await this.updateProfileImage(file)
@@ -77,25 +80,17 @@ export class ProfileService {
         }
     }
 
-    public async deleteUserAccountPlusData(): Promise<any> {
-        try {
-
-            return await this.deleteAccountData()
-
-        } catch (error: unknown) {
-
-            console.warn(`[ERROR]: ${error}`)
-
-            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
-
-        }
-    }
-
     public async downloadAiImage(id: string): Promise<any> {
         try {
 
-            //TODO
-            await this.downloadAiGeneratedImages(id)
+            const fileDir = './users/generatedImages/' + id + '.png'
+
+            if (!fileDir) {
+                throw new NotFoundException();
+            }
+
+            return createReadStream(join(process.cwd(), fileDir));
+            //await this.downloadAiGeneratedImages(id)
 
         } catch (error: unknown) {
 
@@ -152,41 +147,13 @@ export class ProfileService {
 
         const user = this.firebaseService.auth.currentUser;
 
-        //TODO: check file extension
-        //TODO: Check if file exists and delete
-        const filePath = 'profileImages/' + user.uid + '.png'
+        const fileDir = './users/profileImages/' + file.filename
 
-        const checkFile = this.checkIfFileExists(filePath)
 
-        if (!checkFile) {
+        // SEND THE IMG URL TO FIREBASE PROFILE PHOTO
 
-            const fileRef = ref(this.firebaseService.storage, 'profileImages/' + user.uid + '.png');
+        return { message: 'TODO get 3rd party platform to store and get download url to use on your website' }
 
-            const snapshot = await uploadBytes(fileRef, file);
-
-            const photoURL = await getDownloadURL(fileRef);
-
-            updateProfile(user, { photoURL });
-
-            console.log({ status: 'success', pic: user.photoURL })
-        }
-
-    }
-
-    //check if image exist in storage
-    private checkIfFileExists(filePath: string): any {
-
-        const storage = getStorage();
-        const starsRef = ref(storage, filePath);
-
-        // Get the download URL
-        getDownloadURL(starsRef)
-            .then((url) => {
-                return true
-            })
-            .catch((error) => {
-                return false
-            });
     }
 
     private async updateUserAppSettings(body: UserDetails): Promise<any> {
@@ -202,114 +169,22 @@ export class ProfileService {
         return { status: "succes", data: body }
     }
 
-    private async deleteAccountData(): Promise<any> {
 
-        
-        const user = this.firebaseService.auth.currentUser;
-        
-        //TODO: add delete users ( ratings, chats, comments )
-        
-        //Delete User Sub COllections
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersDetails/', 100)
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersFavourites/', 100)
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersHistory/', 100)
-        await this.deleteCollection(this.firebaseService.firestore, this.firebaseService.usersCollection + '/' + user.uid + '/usersShazam/', 100)
-        
-        //Delete User Document
-        const docRefDeatils: DocumentReference = doc(this.firebaseService.usersCollection, user.uid);
-        await deleteDoc(docRefDeatils)
-
-        return { status: "succes", data: 'User deleted successfully' }
-    }
-
-    private async downloadAiGeneratedImages(file: string): Promise<any> {
-
-        const storage = this.firebaseService.storage;
-
-        return getDownloadURL(ref(storage, 'dalleImages/' + file))
-            .then((url) => {
-                // This can be downloaded directly:
-                const xhr = new XMLHttpRequest();
-                xhr.responseType = 'blob';
-                xhr.onload = (event) => {
-                    const blob = xhr.response;
-                };
-                xhr.open('GET', url);
-                xhr.send();
-            })
-            .catch((error) => {
-                // Handle any errors
-            });
-
-    }
-
-    //get all users dalle images
     private async getUsersGeneratedImages(): Promise<any> {
 
         const user = this.firebaseService.auth.currentUser;
 
-        const storage = getStorage();
+        const usersDalleCollectionRef: CollectionReference = this.firebaseService.usersGeneratedImage
 
-        // Create a reference under which you want to list
-        const listRef = ref(storage, 'dalleImages/' + user.uid + '/');
+        const dalleQuery = query(usersDalleCollectionRef, where("userId", "==", user.uid), limit(20));
 
-        const images = [];
+        const usersImagesSnapshot = await getDocs(dalleQuery);
 
-        // Find all the prefixes and items.
-        listAll(listRef)
-            .then((res) => {
-                res.prefixes.forEach((folderRef) => {
-                    // All the prefixes under listRef.
-                    // You may call listAll() recursively on them.
-                });
+        const usersImagesList = [];
 
-                res.items.forEach((itemRef) => {
-                    // All the items under listRef.
-                    images.push(itemRef.name)
-                });
+        usersImagesSnapshot.forEach(doc => usersImagesList.push(doc.data()));
 
-                return images
-            }).catch((error) => {
-                // Uh-oh, an error occurred!
-            });
-    }
-
-    //Helper function to help delete collections
-    private async deleteCollection(db, collectionPath, batchSize): Promise<any> {
-
-        //const collectionRef: CollectionReference = collection(db, collectionPath);
-
-        const collectionRef = db.collection(collectionPath);
-
-        const query = collectionRef.orderBy('__name__').limit(batchSize);
-
-        return new Promise((resolve, reject) => {
-            this.deleteQueryBatch(db, query, resolve).catch(reject);
-        });
-    }
-
-    private async deleteQueryBatch(db, query, resolve) {
-        const snapshot = await query.get();
-
-        const batchSize = snapshot.size;
-        if (batchSize === 0) {
-            // When there are no documents left, we are done
-            resolve();
-            return;
-        }
-
-        // Delete documents in a batch
-        const batch = db.batch();
-        snapshot.docs.forEach((doc) => {
-            batch.delete(doc.ref);
-        });
-        await batch.commit();
-
-        // Recurse on the next process tick, to avoid
-        // exploding the stack.
-        process.nextTick(() => {
-            this.deleteQueryBatch(db, query, resolve);
-        });
+        return { status: "success", data: usersImagesList }
     }
 
 }
