@@ -7,7 +7,7 @@ export class UserDetails {
     activeSpectrum: boolean;
     allowQuiz: boolean;
     allowWeather: boolean;
-    allowComents: boolean;
+    allowComments: boolean;
     allowOnlineStatus: boolean;
     totalMinutesListenec: number;
     totalPlaysCount: number;
@@ -15,5 +15,4 @@ export class UserDetails {
     role: string;
     favouritesCount: number;
     identifiedShazam: number;
-    userExcerpt: string;
 }

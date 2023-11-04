@@ -2,7 +2,10 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { CollectionReference, DocumentReference, updateDoc, doc, query, orderBy, limit, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
+import {
+  CollectionReference, DocumentReference, updateDoc, doc, query, orderBy, limit, where, getDocs, deleteDoc, setDoc, DocumentSnapshot, DocumentData,
+  getDoc
+} from 'firebase/firestore';
 
 @Injectable()
 export class CommentsService {
@@ -18,7 +21,7 @@ export class CommentsService {
       const commentId = this.getUuid()
 
       createCommentDto.userId = user.uid;
-      createCommentDto.commentId = commentId;
+      createCommentDto.id = commentId;
 
       const userComment: CreateCommentDto = {
         ...createCommentDto
@@ -91,6 +94,36 @@ export class CommentsService {
     }
   }
 
+  public async getMixData(mixId: string): Promise<any> {
+
+    try {
+
+      const user = this.firebaseService.auth.currentUser;
+      const uid = user.uid;
+
+      const docRefMixItem: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId);
+      const docRefUsersMixRatings: DocumentReference = doc(this.firebaseService.mixItemsCollection, mixId, 'usersRatings', uid);
+
+      const snapshotMixItem: DocumentSnapshot<DocumentData> = await getDoc(docRefMixItem);
+      const snapshotUsersMixRtaings: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersMixRatings);
+
+
+      const mixItemData = {
+        ratingsDoc: snapshotUsersMixRtaings.data(),
+        mixItemDoc: snapshotMixItem.data(),
+      }
+
+      return { status: "success", data: mixItemData }
+
+    } catch (error: unknown) {
+
+      console.warn(`[ERROR]: ${error}`)
+
+      throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
+
+    }
+  }
+
   //get all the comments of one user
   public async findUsersComments() {
 
@@ -110,7 +143,6 @@ export class CommentsService {
 
       return { status: "success", data: comments }
 
-
     } catch (error: unknown) {
 
       console.warn(`[ERROR]: ${error}`)
@@ -124,7 +156,7 @@ export class CommentsService {
 
     try {
 
-      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, updateCommentDto.commentId);
+      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, updateCommentDto.id);
 
       await updateDoc(docRefUsersDetails, {
         ...updateCommentDto
@@ -164,13 +196,13 @@ export class CommentsService {
 
     try {
 
-      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, updateCommentDto.commentId);
+      const docRefUsersDetails: DocumentReference = doc(this.firebaseService.musicMixCommentsCollection, updateCommentDto.id);
 
       await updateDoc(docRefUsersDetails, {
         ...updateCommentDto
       });
 
-      return { status: "success", msg : "Comment has been "+updateCommentDto.status }
+      return { status: "success", msg: "Comment has been " + updateCommentDto.status }
 
     } catch (error: unknown) {
 

@@ -20,23 +20,24 @@ export class MusicMiddleware implements NestMiddleware {
 
         const settingResult = await this.getAppSettings()
 
-        keyPhrase.forEach(word => {
+        // keyPhrase.forEach(word => {
 
-            if (urlReq.includes(word)) {
+        //     if (urlReq.includes(word)) {
 
-                if (settingResult[word] === true) {
+        //         if (settingResult[word] === true) {
 
 
-                    next();
+        //             next();
 
-                } else {
+        //         } else {
 
-                    throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
-                }
+        //             throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
+        //         }
 
-            }
+        //     }
 
-        });
+        // });
+        next();
 
     }
 

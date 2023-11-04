@@ -28,6 +28,12 @@ export class CommentsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('singleMixData/:mixId')
+  getMixRatingsData(@Param('mixId') mixId: string) {
+    return this.commentsService.getMixData(mixId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('usersComments')
   findUsersComents() {
     return this.commentsService.findUsersComments();

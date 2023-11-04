@@ -12,6 +12,12 @@ import { Socket, Server } from 'socket.io';
 import { UserOnline } from './users.entity';
 import { UserSessionCache } from './user-session-cache';
 
+@WebSocketGateway({
+    cors: {
+        origin: '*',
+    },
+})
+
 @WebSocketGateway({ cors: true })
 export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 
@@ -21,10 +27,8 @@ export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     private logger: Logger = new Logger('OnlineGateway');
 
     @SubscribeMessage('onlineListeners')
-    public async joinRoom(client: Socket, @MessageBody() data: UserOnline,) {
+    public async joinRoom(client: Socket, @MessageBody() data: UserOnline) {
         this.logger.log("onlineListeners", data.userName);
-        client.join('HouseRoom');
-
 
         let userData = {
             userName: data.userName,
@@ -32,10 +36,23 @@ export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGate
             displayPicUrl: data.displayPicUrl
         } as UserOnline;
 
-        this.userSessionCache.addOrUpdate(userData);
+        this.userSessionCache.addOrUpdate(userData).then(activeUsers => {
+            this.server.emit('onlineUsersList', (activeUsers || []));
+        });
 
-        const activeUsers = await this.userSessionCache.getAllActive();
-        this.server.emit('patientList', activeUsers.map(x => x.userName));
+    }
+
+    @SubscribeMessage('unsubscribe')
+    public async handleUnsubscribe(client: Socket, @MessageBody() data: UserOnline ) {
+        this.logger.log(`User ${data.userName} is unsubscribing.`);
+
+        const userName = data.userName;
+
+        if (userName) {
+            this.userSessionCache.remove(userName).then(activeUsers => {
+                this.server.emit('onlineUsersList', (activeUsers || []));
+            });
+        }
     }
 
     afterInit(server: Server) {
@@ -44,6 +61,14 @@ export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     handleDisconnect(client: Socket) {
         this.logger.log(`Client disconnected: ${client.id}`);
+
+        const userName = client.data.userName;
+
+        if (userName) {
+            this.userSessionCache.remove(userName).then(activeUsers => {
+                this.server.emit('onlineUsersList', (activeUsers || []));
+            });
+        }
     }
 
     handleConnection(client: Socket, ...args: any[]) {

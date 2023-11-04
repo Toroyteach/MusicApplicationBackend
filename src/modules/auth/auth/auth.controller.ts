@@ -1,9 +1,10 @@
-import { Body, Controller, Post, Ip, Req, Delete, Patch, Param, Get } from '@nestjs/common';
+import { Body, Controller, Post, Ip, Req, Delete, Patch, Param, Get, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from '../models/user.model';
 import { AuthGuard } from '@nestjs/passport';
 import RefreshTokenDto from './dto/refresh-token.dto';
 import { UserAccount } from '../models/userAccount.model';
+import { JwtAuthGuard } from 'src/modules/auth/auth/guards/jtw-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -28,12 +29,13 @@ export class AuthController {
   }
 
   @Delete('logout')
-  public logout(@Body() body: RefreshTokenDto) {
+  public logout(@Query() body: RefreshTokenDto) {
     return this.authService.logout(body.refreshToken);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('deleteAccount')
-  public deleteAccount(@Body() body: RefreshTokenDto) {
+  public deleteAccount(@Query() body: RefreshTokenDto) {
     return this.authService.deleteAccount(body.refreshToken);
   }
 

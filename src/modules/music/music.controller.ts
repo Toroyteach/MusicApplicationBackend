@@ -1,4 +1,4 @@
-import { Controller, Get, StreamableFile, Res, Post, Body, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, StreamableFile, Res, Post, Body, Delete, UseGuards, Query, Param } from '@nestjs/common';
 import { MusicService } from './music.service';
 import type { Response } from 'express';
 import { UserFavourite } from '../auth/models/userFavourites.model';
@@ -29,22 +29,26 @@ export class MusicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('clippedMix/:id')
-  async downloadClippedMixItem(@Body() clippedId: ClippedMixDownload, @Res({ passthrough: true }) response: Response): Promise<any> {
-
-    const clippedItem = await this.musicService.downloadClippedMixItem(clippedId)
-
+  @Get('clippedMix')
+  async downloadClippedMixItem(@Query() data: ClippedMixDownload, @Res({ passthrough: true }) response: Response): Promise<StreamableFile> {
+    const clippedItem = await this.musicService.downloadClippedMixItem(data)
     response.set({
       'Content-Disposition': `inline; filename="${clippedItem.filename}"`,
-      'Content-Type': clippedItem.mimetype
+      'Content-Type': 'audio/opus'
     })
 
     return new StreamableFile(clippedItem);
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('getMix')
+  async getMix(): Promise<{}> {
+    return this.musicService.getMixList();
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('addUserHistory')
-  async addUserHistory(@Body() userHistory: UserHistory): Promise<any> {
+  async addUserHistory(@Query() userHistory: UserHistory): Promise<any> {
     return this.musicService.addHistoryListens(userHistory)
   }
 
@@ -55,9 +59,9 @@ export class MusicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('deleteUserFavourite')
-  async deleteFavouritesMixItem(@Body() userFavourite: UserFavourite): Promise<any> {
-    return this.musicService.deleteFavouriteMix(userFavourite)
+  @Delete('deleteUserFavourite/:id')
+  async deleteFavouritesMixItem(@Param("id") id: string): Promise<any> {
+    return this.musicService.deleteFavouriteMix(id)
   }
 
   @UseGuards(JwtAuthGuard)
@@ -82,13 +86,13 @@ export class MusicController {
 
   @UseGuards(JwtAuthGuard)
   @Post('generateAiImage')
-  async createDalleAiImages(@Body() userRequestBody: DalleRequestE): Promise<any> {
+  async createDalleAiImages(@Query() userRequestBody: DalleRequestE): Promise<any> {
     return this.musicService.createDalleAiImages(userRequestBody)
   }
 
   //@UseGuards(JwtAuthGuard)
   @Post('generateShazamReq')
-  async createShazamReq(@Body() userShazamBody: ShazamRequest): Promise<any> {
+  async createShazamReq(@Query() userShazamBody: ShazamRequest): Promise<any> {
     return this.musicService.createShazamRequest(userShazamBody)
   }
 }

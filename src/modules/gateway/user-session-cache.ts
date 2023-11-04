@@ -1,8 +1,9 @@
-import { Inject, CACHE_MANAGER, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 import { Cache } from 'cache-manager';
 import { UserSession } from './user-session';
 import { UserOnline } from './users.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class UserSessionCache {
@@ -42,6 +43,8 @@ export class UserSessionCache {
         this.addNewUserSession(userData, allUserSessions);
     }
 
+    return this.getAllActive();
+
   }
 
   private async addNewUserSession(userData: UserOnline, allUserSessions: UserSession[]){
@@ -75,6 +78,8 @@ export class UserSessionCache {
     if (results) {
       const updatedSessions = (results as UserSession[]).filter((x) => x.userName !== userName);
       await this.cacheManager.set(this.key, updatedSessions, this.expired_time);
+      // const activeUsers = updatedSessions.filter(x => x.IsConnected());
+      return await this.getAllActive();
     }
   }
 }

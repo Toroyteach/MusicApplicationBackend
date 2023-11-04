@@ -50,7 +50,7 @@ export class MusicService {
         return createReadStream(join(process.cwd(), fileDir));
     }
 
-    public async addHistoryListens(body: UserFavourite): Promise<any> {
+    public async addHistoryListens(body: UserHistory): Promise<any> {
         try {
 
             const userData = await this.addUserHistoryItems(body)
@@ -82,7 +82,7 @@ export class MusicService {
         }
     }
 
-    public async deleteFavouriteMix(body: UserFavourite): Promise<any> {
+    public async deleteFavouriteMix(body: string): Promise<any> {
         try {
 
             const userData = await this.removeUserFavouriteItems(body)
@@ -96,6 +96,25 @@ export class MusicService {
             throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
 
         }
+    }
+
+
+    public async getMixList(): Promise<any> {
+
+        try {
+
+            const mixData = await this.getAllMixList()
+
+            return mixData;
+
+        } catch (error: unknown) {
+
+            console.warn(`[ERROR]: ${error}`)
+
+            throw new HttpException('Error connecting to Google', HttpStatus.SERVICE_UNAVAILABLE);
+
+        }
+
     }
 
     public async getCalmAnxietyVideo(): Promise<any> {
@@ -245,24 +264,24 @@ export class MusicService {
         } as UserFavourite;
 
 
-        const docRef: DocumentReference = doc(this.firebaseService.usersCollection, user.uid, 'usersFavourites', body.id)
+        const docRef: DocumentReference = doc(this.firebaseService.usersCollection, user.uid, 'usersFavourites', body.mixId)
 
         await setDoc(docRef, userFavourite)
 
         return { status: "succes", data: userFavourite }
     }
 
-    private async removeUserFavouriteItems(body: UserFavourite): Promise<any> {
+    private async removeUserFavouriteItems(id: string): Promise<any> {
 
         const auth = getAuth();
 
         const user = auth.currentUser;
 
-        const userFavouriteDocRef: DocumentReference = doc(this.firebaseService.usersCollection, user.uid, 'usersFavourites', body.id);
+        const userFavouriteDocRef: DocumentReference = doc(this.firebaseService.usersCollection, user.uid, 'usersFavourites', id);
 
         await deleteDoc(userFavouriteDocRef);
 
-        return { status: "delete successucces" }
+        return { status: "succes" }
 
     }
 
@@ -369,5 +388,21 @@ export class MusicService {
             await setDoc(docRef, userShazam)
         }
 
+    }
+
+    private async getAllMixList(): Promise<any> {
+
+        const musicMixCollectionRef: CollectionReference = this.firebaseService.mixItemsCollection
+        const musicMixQuery = query(musicMixCollectionRef, where("status", "==", 'enabled'));
+        const mixesSnapshot = await getDocs(musicMixQuery);
+        const musicMix = [];
+        mixesSnapshot.forEach(doc => musicMix.push(doc.data()));      
+
+        const userData = {
+            mix: {
+                mixData: musicMix,
+            },
+        }
+        return { status: "success", data: userData }
     }
 }

@@ -7,4 +7,6 @@ export class User {
     username: string;
     id: string;
     excerpt: string;
+    role: string;
+    photoUrl: string;
 }

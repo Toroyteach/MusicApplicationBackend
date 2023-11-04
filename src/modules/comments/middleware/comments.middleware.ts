@@ -20,14 +20,16 @@ export class CommentsMiddleware implements NestMiddleware {
         const mixItemResults = await this.getMixItemSettings(mixId)
 
 
-        if (mixItemResults) {
+        // if (mixItemResults) {
 
-            next();
+        //     next();
 
-        } else {
+        // } else {
 
-            throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
-        }
+        //     throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
+        // }
+
+        next();
 
     }
 

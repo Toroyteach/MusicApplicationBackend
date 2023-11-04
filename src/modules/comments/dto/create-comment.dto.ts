@@ -1,5 +1,5 @@
 export class CreateCommentDto {
-    content: string;
+    boby: string;
     mixItemId: string;
     dateCreated: string;
     status: string;
@@ -7,5 +7,7 @@ export class CreateCommentDto {
     userId: string;
     userPic: string;
     username: string;
-    commentId: string;
+    id: string;
+    parentId: string;
+    mixItem: string;
 }

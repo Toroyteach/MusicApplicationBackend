@@ -1,4 +1,5 @@
 import { Module, RequestMethod, MiddlewareConsumer } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth/auth.module';
@@ -23,8 +24,8 @@ import { GatewayModule } from './modules/gateway/gateway.module';
 import { MusicController } from './modules/music/music.controller';
 
 @Module({
-  imports: [ JwtModule.register({ secret, signOptions: { expiresIn: '2h' } }), ConfigModule.forRoot({ isGlobal: true }), 
-  AuthModule, ProfileModule, ProfileModule, MusicModule, ChatsModule, CommentsModule, AdminModule, NotificationModule, RatingsModule, FeedbackModule, GatewayModule],
+  imports: [ JwtModule.register({ secret, signOptions: { expiresIn: '2h' } }), ConfigModule.forRoot({ isGlobal: true }), CacheModule.register(),
+  AuthModule, ProfileModule, MusicModule, ChatsModule, CommentsModule, NotificationModule, RatingsModule, FeedbackModule, GatewayModule],
   //controllers: [AppController, ProfileController],
   //providers: [AppService, FirebaseService, ProfileService, JwtService],
 })

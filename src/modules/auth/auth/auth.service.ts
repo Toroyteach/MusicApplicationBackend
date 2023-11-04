@@ -8,7 +8,7 @@ import { UserShazam } from '../models/userShazam.model';
 import RefreshToken from './entities/refresh-token.entity';
 import { sign, verify } from 'jsonwebtoken';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail, updateEmail } from 'firebase/auth'
-import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc } from 'firebase/firestore'
+import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc, CollectionReference, query, getDocs, where, limit, orderBy, QuerySnapshot, collection } from 'firebase/firestore'
 import { JwtService } from '@nestjs/jwt';
 import { UserAccount } from '../models/userAccount.model';
 import { ConfigService } from '@nestjs/config';
@@ -67,11 +67,11 @@ export class AuthService {
 
                 this.createNewUserDetails(userCredential)
 
-                this.createNewUserHistoryDetails(userCredential);
+                // this.createNewUserHistoryDetails(userCredential);
 
-                this.createNewUserFavouritesDetails(userCredential);
+                // this.createNewUserFavouritesDetails(userCredential);
 
-                this.createNewUserShazamDetails(userCredential);
+                // this.createNewUserShazamDetails(userCredential);
 
                 return { status: "succes", data: body }
             }
@@ -85,16 +85,15 @@ export class AuthService {
         }
     }
 
-    public async logout(refreshStr): Promise<void> {
+    public async logout(refreshStr): Promise<object> {
 
         const refreshToken = await this.retrieveRefreshToken(refreshStr);
-        /////failing here
+        
         if (!refreshToken) {
             return;
         }
-
-        try {
-
+        
+        try {            
             const auth = this.firebaseService.auth;
 
             signOut(auth).then(() => {
@@ -103,15 +102,13 @@ export class AuthService {
                 this.refreshTokens = this.refreshTokens.filter(
                     (refreshToken) => refreshToken.id !== refreshToken.id,
                 );
-
-                return { message: 'logged out Succseffuly' }
-
+                
             }).catch((error) => {
-
-                // An error happened.
-                console.log(error)
+                
+                console.warn(error)
             });
-
+            
+            return Promise.resolve({ message: 'logged out Succseffuly', success: true });
 
         } catch (error: unknown) {
 
@@ -139,7 +136,7 @@ export class AuthService {
     public async deleteAccount(refreshStr): Promise<void> {
 
         const refreshToken = await this.retrieveRefreshToken(refreshStr);
-        /////failing here
+        
         if (!refreshToken) {
             return;
         }
@@ -265,15 +262,13 @@ export class AuthService {
         }
     }
 
-    private retrieveRefreshToken(refreshStr: string): Promise<RefreshToken | undefined> {
+    private async retrieveRefreshToken(refreshStr: string): Promise<RefreshToken | undefined> {
 
         try {
 
             const refreshSecrete = this.configService.get<string>('REFRESH_SECRET')
 
             const decoded = verify(refreshStr, refreshSecrete);
-
-            console.log(decoded)
 
             if (typeof decoded === 'string') {
                 return undefined;
@@ -293,24 +288,50 @@ export class AuthService {
 
     private async getUserData(id: string): Promise<any> {
 
+        const docRefUserBio: DocumentReference = doc(this.firebaseService.usersCollection, id);
         const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersDetails', id);
-        const docRefUsersFavourite: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersFavourites', id);
-        const docRefUsersHistory: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersHistory', id);
-        const docRefUsersShazam: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersShazam', id);
 
+        const snapshotUsersBio: DocumentSnapshot<DocumentData> = await getDoc(docRefUserBio);
         const snapshotUsersDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersDetails);
-        const snapshotUsersHistory: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersFavourite);
-        const snapshotUsersFavourite: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersHistory);
-        const snapshotUsersShazam: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersShazam);
+
+        const docRefAppData: DocumentReference = doc(this.firebaseService.appSettingsCollection, 'uk6P9Jpic6mBylhbvVUR');
+        const snapshotAppData: DocumentSnapshot<DocumentData> = await getDoc(docRefAppData);
+
 
         const userData = {
+            firebaseUid: id,
+            userBio: snapshotUsersBio.data(),
             appData: snapshotUsersDetails.data(),
-            historyData: snapshotUsersHistory.data(),
-            favouriteData: snapshotUsersFavourite.data(),
-            shazamData: snapshotUsersShazam.data(),
+            appSettings: snapshotAppData.data(),
         }
 
         return userData;
+    }
+
+    private async getAppData(id: string): Promise<any> {
+
+        const docRefUserBio: DocumentReference = doc(this.firebaseService.appSettingsCollection, id);
+
+        const snapshotUsersDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefUserBio);
+
+        const responseData = {
+            appSettings: snapshotUsersDetails
+        }
+
+        return responseData;
+    }
+
+    private async getMusicData(id: string): Promise<any> {
+
+        const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, id, 'usersDetails', id);
+
+        const snapshotUsersDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersDetails);
+
+        const responseData = {
+            musicSettings: snapshotUsersDetails.data(),
+        }
+
+        return responseData;
     }
 
     private async createUserCollection(body: Omit<User, 'id'>, userCredential: UserCredential): Promise<void> {
@@ -344,7 +365,7 @@ export class AuthService {
             activeSpectrum: false,
             allowQuiz: false,
             allowWeather: false,
-            allowComents: false,
+            allowComments: false,
             allowOnlineStatus: false,
             totalMinutesListenec: 0,
             totalPlaysCount: 0,
@@ -352,7 +373,6 @@ export class AuthService {
             role: 'null',
             favouritesCount: 0,
             identifiedShazam: 0,
-            userExcerpt: 'null',
         }
 
         await setDoc(docRef, userDetails)
@@ -387,6 +407,7 @@ export class AuthService {
             id: 'null',
             title: 'null',
             artist: 'null',
+            mixId: 'null'
         }
 
         await setDoc(docRef, userFavourite)

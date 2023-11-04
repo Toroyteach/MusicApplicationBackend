@@ -71,7 +71,7 @@ export class RatingsService {
 
     setDoc(docRef, userRating)
 
-    return { status: "success", msg: 'Rating was added successfully' }
+    return { status: "success", data: userRating }
   }
 
   private async getUserRating(payload: CreateRatingDto) {
@@ -111,6 +111,6 @@ export class RatingsService {
       ...payload
     })
 
-    return { status: "success", msg: 'Rating was updated successfully'}
+    return { status: "success", data: userRatings}
   }
 }
