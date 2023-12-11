@@ -28,7 +28,7 @@ export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     @SubscribeMessage('onlineListeners')
     public async joinRoom(client: Socket, @MessageBody() data: UserOnline) {
-        this.logger.log("onlineListeners", data.userName);
+        // this.logger.log("onlineListeners", data.userName);
 
         let userData = {
             userName: data.userName,
@@ -44,7 +44,7 @@ export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     @SubscribeMessage('unsubscribe')
     public async handleUnsubscribe(client: Socket, @MessageBody() data: UserOnline ) {
-        this.logger.log(`User ${data.userName} is unsubscribing.`);
+        // this.logger.log(`User ${data.userName} is unsubscribing.`);
 
         const userName = data.userName;
 
@@ -60,7 +60,7 @@ export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     handleDisconnect(client: Socket) {
-        this.logger.log(`Client disconnected: ${client.id}`);
+        // this.logger.log(`Client disconnected: ${client.id}`);
 
         const userName = client.data.userName;
 
@@ -72,6 +72,6 @@ export class OnlineGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     handleConnection(client: Socket, ...args: any[]) {
-        this.logger.log(`Client connected: ${client.id}`);
+        // this.logger.log(`Client connected: ${client.id}`);
     }
 }

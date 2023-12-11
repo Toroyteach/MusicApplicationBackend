@@ -187,7 +187,7 @@ export class ProfileService {
         const docRefUsersDetails: DocumentReference = doc(this.firebaseService.usersCollection, user.uid);
         
         const newData = {
-            photoUrl : file['filename'],
+            photoUrl : 'http://localhost:3010/profile/getProfileImage?profileImage='+file['filename'],
         } as User;
         
         await updateDoc(docRefUsersDetails, {
@@ -195,7 +195,7 @@ export class ProfileService {
         });
 
 
-        return { photoUrl: file['filename'], success: true }
+        return { photoUrl: newData.photoUrl, success: true }
 
     }
 

@@ -1,4 +1,4 @@
-import { Controller, Get, StreamableFile, Res, Post, Body, Delete, UseGuards, Query, Param } from '@nestjs/common';
+import { Controller, Get, StreamableFile, Res, Post, Body, Delete, UseGuards, Query, Param, HttpException, HttpStatus } from '@nestjs/common';
 import { MusicService } from './music.service';
 import type { Response } from 'express';
 import { UserFavourite } from '../auth/models/userFavourites.model';
@@ -8,6 +8,8 @@ import { JwtAuthGuard } from '../auth/auth/guards/jtw-auth.guard';
 import { ShazamRequest } from './entity/shazamrequest.entity';
 import { MixDownloadRequest } from './entity/mixDownload.entity';
 import { ClippedMixDownload } from './entity/clippedMix.entity';
+import { CoverArtImageDto } from './entity/coverArt.entity';
+import { Observable } from 'rxjs';
 
 @Controller('music')
 export class MusicController {
@@ -25,7 +27,6 @@ export class MusicController {
     })
 
     return new StreamableFile(mixItem);
-
   }
 
   @UseGuards(JwtAuthGuard)
@@ -94,5 +95,20 @@ export class MusicController {
   @Post('generateShazamReq')
   async createShazamReq(@Query() userShazamBody: ShazamRequest): Promise<any> {
     return this.musicService.createShazamRequest(userShazamBody)
+  }
+
+  @Get('getCoverArtImage')
+  getCoverArtImage(@Query() body: CoverArtImageDto, @Res() res): Observable<Object> {
+    try {
+
+      return res.sendFile(body.coverArtImage, {root: 'src/modules/music/coverArt/'})
+
+    } catch (error: unknown) {
+
+      console.warn(`[ERROR]: ${error}`)
+
+      throw new HttpException('Error Getting File', HttpStatus.SERVICE_UNAVAILABLE);
+
+    }
   }
 }

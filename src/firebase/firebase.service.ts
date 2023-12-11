@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Config } from 'src/firebase/config.models';
 import { Auth, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, signOut, deleteUser, sendPasswordResetEmail, updateEmail, updateProfile } from 'firebase/auth';
-import { updateDoc, DocumentReference, doc, addDoc, getDocs, CollectionReference, collection, deleteDoc, Firestore, getFirestore, DocumentSnapshot, DocumentData, getDoc } from 'firebase/firestore'
+import { updateDoc, DocumentReference, doc, query, where, getDocs, CollectionReference, collection, deleteDoc, Firestore, getFirestore, DocumentSnapshot, DocumentData, getDoc } from 'firebase/firestore'
 import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes, deleteObject, listAll } from "firebase/storage";
 
 @Injectable()
@@ -57,16 +57,23 @@ export class FirebaseService {
     }
 
     public async getApplicationSettings() {
+        // Mix stats
+        const musicMixCollectionRef: CollectionReference = this.mixItemsCollection
+        const musicMixQuery = query(musicMixCollectionRef, where("status", "==", 'enabled'));
+        const mixesSnapshot = await getDocs(musicMixQuery);
+        const musicMix = [];
+        mixesSnapshot.forEach(doc => musicMix.push(doc.data()));
+
 
         const docRefUsersDetails: DocumentReference = doc(this.appSettingsCollection, 'uk6P9Jpic6mBylhbvVUR');
-
         const snapshotUsersDetails: DocumentSnapshot<DocumentData> = await getDoc(docRefUsersDetails);
 
         const appData = {
             appData: snapshotUsersDetails.data(),
+            mixStatData: musicMix,
         }
 
-        return appData;
+        return {status: "succes", data: appData};
     }
 
     public async getMixItemSettings(mixId: string) {
@@ -77,7 +84,7 @@ export class FirebaseService {
 
         const mixData = snapshotMixItemDetails.data()
 
-        return mixData
+        return {status: "succes", data: mixData};
     }
 
 }

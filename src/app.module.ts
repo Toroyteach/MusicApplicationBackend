@@ -22,10 +22,12 @@ import { RatingsModule } from './modules/ratings/ratings.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
 import { MusicController } from './modules/music/music.controller';
+import { DisabledUsersMiddleware } from './utils/authorize.middleware';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
   imports: [ JwtModule.register({ secret, signOptions: { expiresIn: '2h' } }), ConfigModule.forRoot({ isGlobal: true }), CacheModule.register(),
-  AuthModule, ProfileModule, MusicModule, ChatsModule, CommentsModule, NotificationModule, RatingsModule, FeedbackModule, GatewayModule],
+  AuthModule, ProfileModule, MusicModule, ChatsModule, CommentsModule, NotificationModule, RatingsModule, FeedbackModule, GatewayModule, AdminModule, SharedModule],
   //controllers: [AppController, ProfileController],
   //providers: [AppService, FirebaseService, ProfileService, JwtService],
 })
@@ -33,8 +35,15 @@ export class AppModule {
 
   // configure(consumer: MiddlewareConsumer) {
   //   consumer
-  //     .apply(AppSettingsMiddleware)
-  //     .forRoutes(MusicController);
+  //     .apply(DisabledUsersMiddleware)
+  //     // .exclude({ path: 'auth', method: RequestMethod.ALL })
+  //     // .forRoutes('*');
+  //     .forRoutes(
+  //       { path: 'music/*', method: RequestMethod.ALL },
+  //       { path: 'comments/*', method: RequestMethod.ALL },
+  //       { path: 'feedback/*', method: RequestMethod.ALL },
+  //       { path: 'profile/*', method: RequestMethod.ALL },
+  //     );
   // }
 
 }

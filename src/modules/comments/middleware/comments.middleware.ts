@@ -27,6 +27,7 @@ export class CommentsMiddleware implements NestMiddleware {
         // } else {
 
         //     throw new HttpException('This Action is not Authorised.', HttpStatus.UNAUTHORIZED);
+        
         // }
 
         next();
@@ -38,7 +39,7 @@ export class CommentsMiddleware implements NestMiddleware {
         const mixSet = await this.firebaseService.getMixItemSettings(mixId)
 
 
-        if (mixSet.commentsEnabled === true) {
+        if (mixSet.data.commentsEnabled === true) {
 
             return true
 

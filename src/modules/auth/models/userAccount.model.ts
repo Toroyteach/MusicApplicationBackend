@@ -5,5 +5,6 @@ export class UserAccount {
     lastSignInTime: string;
     creationTime: string;
     emailVerified: boolean;
-    admin
+    admin;
+    disabled: boolean;
 }

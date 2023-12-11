@@ -45,7 +45,7 @@ export class MusicMiddleware implements NestMiddleware {
 
         const results = await this.firebaseService.getApplicationSettings()
 
-        return results.appData
+        return results.data.appData
 
     }
 }

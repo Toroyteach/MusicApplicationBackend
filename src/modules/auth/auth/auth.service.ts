@@ -7,19 +7,19 @@ import { UserFavourite } from '../models/userFavourites.model';
 import { UserShazam } from '../models/userShazam.model';
 import RefreshToken from './entities/refresh-token.entity';
 import { sign, verify } from 'jsonwebtoken';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail, updateEmail } from 'firebase/auth'
-import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc, CollectionReference, query, getDocs, where, limit, orderBy, QuerySnapshot, collection } from 'firebase/firestore'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, getAuth, signOut, deleteUser, sendPasswordResetEmail, updateEmail, updateProfile } from 'firebase/auth'
+import { setDoc, DocumentReference, doc, getDoc, DocumentSnapshot, DocumentData, deleteDoc, CollectionReference, query, getDocs, where, limit, orderBy, QuerySnapshot, collection, updateDoc, increment } from 'firebase/firestore'
 import { JwtService } from '@nestjs/jwt';
 import { UserAccount } from '../models/userAccount.model';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/firebase/config.models';
-
+import { RefreshTokenService } from 'src/shared/refresh-token/refresh-token.service';
 @Injectable()
 export class AuthService {
 
     private refreshTokens: RefreshToken[] = [];
 
-    constructor(private firebaseService: FirebaseService, private jwtTokenService: JwtService, private configService: ConfigService<Config>) { }
+    constructor(private firebaseService: FirebaseService, private readonly refreshTokenService: RefreshTokenService, private configService: ConfigService<Config>) { }
 
     public async login(email: string, password: string, values: { userAgent: string; ipAddress: string }): Promise<any> {
 
@@ -33,7 +33,6 @@ export class AuthService {
 
                 const user = {
                     email: email,
-                    password: password,
                     id: id,
                 } as User;
 
@@ -51,7 +50,7 @@ export class AuthService {
 
     }
 
-    public async register(body: Omit<User, 'id'>): Promise<{}> {
+    public async register(body: User): Promise<{}> {
 
         try {
 
@@ -88,26 +87,23 @@ export class AuthService {
     public async logout(refreshStr): Promise<object> {
 
         const refreshToken = await this.retrieveRefreshToken(refreshStr);
-        
+
         if (!refreshToken) {
             return;
         }
-        
-        try {            
+
+        try {
             const auth = this.firebaseService.auth;
 
             signOut(auth).then(() => {
 
-                // delete refreshtoken from db
-                this.refreshTokens = this.refreshTokens.filter(
-                    (refreshToken) => refreshToken.id !== refreshToken.id,
-                );
-                
+                this.refreshTokenService.revokeTokensForUser(refreshToken.id)
+
             }).catch((error) => {
-                
+
                 console.warn(error)
             });
-            
+
             return Promise.resolve({ message: 'logged out Succseffuly', success: true });
 
         } catch (error: unknown) {
@@ -136,7 +132,7 @@ export class AuthService {
     public async deleteAccount(refreshStr): Promise<void> {
 
         const refreshToken = await this.retrieveRefreshToken(refreshStr);
-        
+
         if (!refreshToken) {
             return;
         }
@@ -225,35 +221,16 @@ export class AuthService {
         return sign(accessToken, accessSecret, { expiresIn: '2h' });
     }
 
-    private async newRefreshAndAccessToken(user: User, values: { userAgent: string; ipAddress: string },): Promise<{ accessToken: string; refreshToken: string; userData: {} }> {
-
-        const refreshObject = new RefreshToken({
-            id: this.refreshTokens.length === 0 ? 0 : this.refreshTokens[this.refreshTokens.length - 1].id + 1,
-            ...values,
-            userId: user.id,
-        });
-
-        this.refreshTokens.push(refreshObject);
+    private async newRefreshAndAccessToken(user: User, values: { userAgent: string; ipAddress: string },): Promise<{ newToken: {}; userData: {} }> {
 
         try {
 
             const userData = await this.getUserData(user.id)
 
-            //TODO: get the user pending notifications and send back pending count or id.
-            const accessSecrete = this.configService.get<string>('ACCESS_SECRET')
+            const newToken = this.refreshTokenService.generateToken(user, values);
 
             return {
-                refreshToken: refreshObject.sign(),
-                accessToken: sign(
-                    {
-                        userId: user.id,
-                        userEmail: user.email,
-                    },
-                    accessSecrete,
-                    {
-                        expiresIn: '1h',
-                    },
-                ),
+                newToken,
                 userData: userData,
             };
 
@@ -266,16 +243,14 @@ export class AuthService {
 
         try {
 
-            const refreshSecrete = this.configService.get<string>('REFRESH_SECRET')
-
-            const decoded = verify(refreshStr, refreshSecrete);
+            const decoded = this.refreshTokenService.retrieveRefreshToken(refreshStr);
 
             if (typeof decoded === 'string') {
                 return undefined;
             }
 
             return Promise.resolve(
-                this.refreshTokens.find((token) => token.id === decoded.id),
+                decoded
             );
 
         } catch (e) {
@@ -334,7 +309,7 @@ export class AuthService {
         return responseData;
     }
 
-    private async createUserCollection(body: Omit<User, 'id'>, userCredential: UserCredential): Promise<void> {
+    private async createUserCollection(body: User, userCredential: UserCredential): Promise<void> {
         const user: User = {
             ...body
         } as User;
@@ -344,6 +319,19 @@ export class AuthService {
         const id: string = userCredential.user.uid;
 
         const docRef: DocumentReference = doc(this.firebaseService.usersCollection, id)
+        const docRefAppData: DocumentReference = doc(this.firebaseService.appSettingsCollection, 'uk6P9Jpic6mBylhbvVUR');
+
+        await updateDoc(docRefAppData, {
+            usersCount: increment(1)
+        });
+
+
+        const thisUser = this.firebaseService.auth.currentUser;
+        updateProfile(thisUser, { displayName: user.firstname + user.lastname }).then(() => {
+            return 'success'
+        }).catch((error) => {
+            // An error occurred
+        });
 
         await setDoc(docRef, user)
     }
@@ -453,13 +441,12 @@ export class AuthService {
         const auth = getAuth()
 
         sendPasswordResetEmail(auth, email)
-            .then(() => {
+        .then(() => {
                 return 'success'
             })
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
-                // ..
             });
     }
 

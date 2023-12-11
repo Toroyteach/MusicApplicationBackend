@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Ip, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/modules/auth/auth/guards/jtw-auth.guard';
+import { User } from 'src/modules/auth/models/user.model';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateMixItemDto } from './dto/create-mix-item.dto';
 import { MixEnabledStatus } from './dto/mixStatus.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { UpdateMixItemDto } from './dto/update-mix-item.dto';
+import { UserComment } from './dto/update-user-comment.dto';
 import { EnableCommentsOnMix } from './dto/updateMixComment.dto';
 import { UserAccountStatus } from './dto/userStatus.dto';
 
@@ -20,9 +22,15 @@ export class AdminController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('disableUser/:id')
+  @Post('disableUser/:id')
   disableUser(@Param('id') id: string, @Body() body: UserAccountStatus) {
     return this.adminService.disableUser(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getAppSettingsData')
+  getAppSettingsData() {
+    return this.adminService.getAppData();
   }
 
   @UseGuards(JwtAuthGuard)
@@ -41,6 +49,12 @@ export class AdminController {
   @Patch('disableCommentOnMix/:id')
   disableCommentOnMix(@Param('id') id: string, @Body() body: EnableCommentsOnMix) {
     return this.adminService.disableCommentOnMixItem(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('disableUserCommentOnMix/:id')
+  disableUserCommentOn(@Param('id') id: string, @Body() body: UserComment) {
+    return this.adminService.disableUserCommentItem(id, body);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -71,5 +85,13 @@ export class AdminController {
   @Delete('deleteMixItem/:id')
   deleteMixItem(@Param('id') id: string) {
     return this.adminService.deleteMixItem(id)
+  }
+
+  @Post('loginSocial')
+  public loginSocial(@Body() body: User, @Ip() ip: string, @Req() request) {
+    return this.adminService.loginSocially(body, {
+      ipAddress: ip,
+      userAgent: request.headers['user-agent'],
+    });
   }
 }

@@ -6,9 +6,10 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { SharedModule } from 'src/shared/shared.module';
 
 @Module({
-  imports: [ConfigModule, PassportModule, JwtModule.register({ secret: 'topSecret', signOptions: {expiresIn: '1h'}})],
+  imports: [ConfigModule, PassportModule, JwtModule.register({ secret: 'topSecret', signOptions: {expiresIn: '1h'}}), SharedModule],
   controllers: [AuthController],
   providers: [AuthService, FirebaseService, JwtStrategy],
   exports: [AuthService, JwtStrategy],

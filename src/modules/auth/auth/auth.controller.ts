@@ -18,8 +18,16 @@ export class AuthController {
     });
   }
 
+  // @Post('loginSocial')
+  // public loginSocial(@Body() body: User, @Ip() ip: string, @Req() request) {
+  //   return this.authService.loginSocially(body, {
+  //     ipAddress: ip,
+  //     userAgent: request.headers['user-agent'],
+  //   });
+  // }
+
   @Post('register')
-  public register(@Body() body: Omit<User, 'id'>) {
+  public register(@Body() body: User) {
     return this.authService.register(body);
   }
 
@@ -44,7 +52,7 @@ export class AuthController {
     return this.authService.updateUserAuth(body)
   }
 
-  @Get(':email')
+  @Get('updatePassword/:email')
   public resetPassword(@Param('email') email: string) {
     return this.authService.resetPassword(email)
   }
